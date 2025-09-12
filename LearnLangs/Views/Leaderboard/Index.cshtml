@@ -1,0 +1,29 @@
+﻿@model IEnumerable<LearnLangs.Models.ApplicationUser>
+
+@{
+    ViewData["Title"] = "Leaderboard";
+}
+
+<h1>Leaderboard</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Rank</th>
+            <th>User</th>
+            <th>XP</th>
+            <th>Streak</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@(Model.ToList().IndexOf(user) + 1)</td>  <!-- Calculate Rank based on the position -->
+                <td>@user.UserName</td>  <!-- Display the user's username -->
+                <td>@user.TotalXP</td>  <!-- Display the user's XP -->
+                <td>@user.CurrentStreak</td>  <!-- Display the user's current streak -->
+            </tr>
+        }
+    </tbody>
+</table>
