@@ -31,15 +31,17 @@
                             <a class="nav-link" asp-controller="Courses" asp-action="Index">Courses</a>
                         </li>
                     </ul>
+
                     <!-- Add user info and XP/Streak to the navbar -->
                     <ul class="navbar-nav">
                         @if (SignInManager.IsSignedIn(User))
                         {
                             var user = await UserManager.GetUserAsync(User);
                               <!-- Get the current user -->
+
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">
-                                    Hello @user.UserName!  <!-- Display user's name -->
+                                    Hello @user.UserName! <!-- Display user's name -->
                                 </a>
                             </li>
                             <li class="nav-item">
