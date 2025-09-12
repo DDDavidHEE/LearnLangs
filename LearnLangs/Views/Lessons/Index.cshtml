@@ -1,0 +1,56 @@
+﻿@model IEnumerable<LearnLangs.Models.Lesson>
+
+@{
+    ViewData["Title"] = "Lessons";
+    var courseId = (int)ViewBag.CourseId;
+}
+
+<h2>Lessons</h2>
+<p>
+    <a asp-controller="Courses" asp-action="Index" class="btn btn-outline-secondary">← Back to Courses</a>
+</p>
+
+<!-- List of Lessons -->
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Course)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Title)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.OrderIndex)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.XpReward)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Course.Name)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Title)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.OrderIndex)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.XpReward)
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
