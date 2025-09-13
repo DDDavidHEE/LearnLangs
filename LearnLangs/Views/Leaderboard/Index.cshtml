@@ -1,4 +1,6 @@
-﻿@model IEnumerable<LearnLangs.Models.ApplicationUser>
+﻿@using X.PagedList 
+@using X.PagedList.Mvc.Core
+@model IPagedList<LearnLangs.Models.ApplicationUser>
 
 @{
     ViewData["Title"] = "Leaderboard";
@@ -19,11 +21,16 @@
         @foreach (var user in Model)
         {
             <tr>
-                <td>@(Model.ToList().IndexOf(user) + 1)</td>  <!-- Calculate Rank based on the position -->
-                <td>@user.UserName</td>  <!-- Display the user's username -->
-                <td>@user.TotalXP</td>  <!-- Display the user's XP -->
-                <td>@user.CurrentStreak</td>  <!-- Display the user's current streak -->
+                <td>@(Model.ToList().IndexOf(user) + 1)</td>  <!-- Rank -->
+                <td>@user.UserName</td>  <!-- Display user's username -->
+                <td>@user.TotalXP</td>  <!-- Display user's XP -->
+                <td>@user.CurrentStreak</td>  <!-- Display user's streak -->
             </tr>
         }
     </tbody>
 </table>
+
+<!-- Pagination Controls -->
+<div class="pagination">
+    @Html.PagedListPager(Model, page => Url.Action("Index", new { page }), PagedListRenderOptions.Classic)
+</div>

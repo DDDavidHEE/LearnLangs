@@ -3,6 +3,8 @@ using LearnLangs.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using X.PagedList;
+using X.PagedList.Extensions;
 
 namespace LearnLangs.Controllers
 {
@@ -18,15 +20,21 @@ namespace LearnLangs.Controllers
         }
 
         // GET: Leaderboard
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int page = 1)
         {
-            // Get the top users ordered by XP
-            var topUsers = await _context.Users
-                                         .OrderByDescending(u => u.TotalXP)  // Order by XP
-                                         .Take(10)  // Limit to top 10 users
-                                         .ToListAsync();
+            int pageSize = 10;
 
-            return View(topUsers);
+            // Apply pagination directly on IQueryable
+            var topUsers = _context.Users
+                .OrderByDescending(u => u.TotalXP);  // IQueryable (no ToListAsync)
+
+            // Convert to a List first, and then paginate
+            var usersList = await topUsers.ToListAsync(); // Fetch data from DB
+
+            // Apply pagination on the List
+            var pagedUsers = usersList.ToPagedList(page, pageSize);  // Pagination logic
+
+            return View(pagedUsers);  // Return paginated users to view
         }
     }
 }
