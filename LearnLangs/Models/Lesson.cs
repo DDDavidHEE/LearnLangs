@@ -16,6 +16,7 @@ namespace LearnLangs.Models
 
         public int OrderIndex { get; set; }
         public int XpReward { get; set; } = 10;
+       
 
         public ICollection<Question> Questions { get; set; } = new List<Question>();
         public ICollection<UserLesson> UserLessons { get; set; } = new List<UserLesson>();
