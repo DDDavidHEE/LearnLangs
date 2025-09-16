@@ -26,28 +26,48 @@
                         @if (!string.IsNullOrWhiteSpace(q.OptionA))
                         {
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="Questions[@i].UserAnswer" value="A" id="q@q.QuestionId-a">
+                                <input class="form-check-input"
+                                       type="radio"
+                                       name="Questions[@i].UserAnswer"
+                                       value="A"
+                                       id="q@q.QuestionId-a"
+                                       required>
                                 <label class="form-check-label" for="q@q.QuestionId-a">A. @q.OptionA</label>
                             </div>
                         }
                         @if (!string.IsNullOrWhiteSpace(q.OptionB))
                         {
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="Questions[@i].UserAnswer" value="B" id="q@q.QuestionId-b">
+                                <input class="form-check-input"
+                                       type="radio"
+                                       name="Questions[@i].UserAnswer"
+                                       value="B"
+                                       id="q@q.QuestionId-b"
+                                       required>
                                 <label class="form-check-label" for="q@q.QuestionId-b">B. @q.OptionB</label>
                             </div>
                         }
                         @if (!string.IsNullOrWhiteSpace(q.OptionC))
                         {
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="Questions[@i].UserAnswer" value="C" id="q@q.QuestionId-c">
+                                <input class="form-check-input"
+                                       type="radio"
+                                       name="Questions[@i].UserAnswer"
+                                       value="C"
+                                       id="q@q.QuestionId-c"
+                                       required>
                                 <label class="form-check-label" for="q@q.QuestionId-c">C. @q.OptionC</label>
                             </div>
                         }
                         @if (!string.IsNullOrWhiteSpace(q.OptionD))
                         {
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="Questions[@i].UserAnswer" value="D" id="q@q.QuestionId-d">
+                                <input class="form-check-input"
+                                       type="radio"
+                                       name="Questions[@i].UserAnswer"
+                                       value="D"
+                                       id="q@q.QuestionId-d"
+                                       required>
                                 <label class="form-check-label" for="q@q.QuestionId-d">D. @q.OptionD</label>
                             </div>
                         }
@@ -56,7 +76,11 @@
                 else
                 {
                     <div class="ms-3">
-                        <input class="form-control" name="Questions[@i].UserAnswer" placeholder="Type your answer..." />
+                        <input class="form-control"
+                               name="Questions[@i].UserAnswer"
+                               placeholder="Type your answer..."
+                               autocomplete="off"
+                               required />
                     </div>
                 }
             </li>
