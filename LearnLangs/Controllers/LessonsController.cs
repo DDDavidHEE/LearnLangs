@@ -98,6 +98,119 @@ namespace LearnLangs.Controllers
 
 
 
+        // POST: Lessons/TakeQuiz
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> TakeQuiz(LearnLangs.ViewModels.TakeQuizVM vm)
+        {
+            if (!ModelState.IsValid) return View(vm);
+
+            // Lấy thông tin bài học
+            var lesson = await _context.Lessons
+                .AsNoTracking()
+                .FirstOrDefaultAsync(l => l.Id == vm.LessonId);
+            if (lesson == null) return NotFound();
+
+            // Chấm điểm
+            int correct = 0;
+            foreach (var qvm in vm.Questions)
+            {
+                var q = await _context.Questions
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.Id == qvm.QuestionId);
+                if (q == null) continue;
+
+                string ans = (qvm.UserAnswer ?? "").Trim();
+
+                if (q.IsMultipleChoice)
+                {
+                    if (!string.IsNullOrWhiteSpace(ans) &&
+                        string.Equals(ans, q.CorrectAnswer, StringComparison.OrdinalIgnoreCase))
+                        correct++;
+                }
+                else
+                {
+                    // Ưu tiên ShortAnswer, nếu null thì dùng FillInTheBlankAnswer
+                    string corr = (q.ShortAnswer ?? q.FillInTheBlankAnswer ?? "").Trim();
+                    if (!string.IsNullOrEmpty(corr) &&
+                        string.Equals(ans, corr, StringComparison.OrdinalIgnoreCase))
+                        correct++;
+                }
+            }
+
+            // Lưu tiến độ UserLesson
+            var user = await _userManager.GetUserAsync(User);
+            var userLesson = await _context.UserLessons
+                .FirstOrDefaultAsync(ul => ul.UserId == user.Id && ul.LessonId == vm.LessonId);
+
+            if (userLesson == null)
+            {
+                userLesson = new UserLesson
+                {
+                    UserId = user.Id,
+                    LessonId = vm.LessonId
+                };
+                _context.UserLessons.Add(userLesson);
+            }
+
+            userLesson.Score = correct;
+            userLesson.IsCompleted = true;
+            userLesson.CompletedOn = DateTime.UtcNow;
+
+            // Cộng XP & cập nhật streak (theo XpReward của bài)
+            var today = DateTime.UtcNow.Date;
+            var last = user.LastActiveDate?.Date;
+
+            if (last == today)
+            {
+                // đã hoạt động hôm nay
+            }
+            else if (last == today.AddDays(-1))
+            {
+                user.CurrentStreak += 1;
+            }
+            else
+            {
+                user.CurrentStreak = 1;
+            }
+
+            user.LastActiveDate = today;
+            user.TotalXP += lesson.XpReward;
+
+            // mốc thưởng streak
+            if (user.CurrentStreak >= 7 && !user.Has7DayStreakReward)
+            {
+                user.TotalXP += 50;
+                user.Has7DayStreakReward = true;
+            }
+            if (user.CurrentStreak >= 30 && !user.Has30DayStreakReward)
+            {
+                user.TotalXP += 100;
+                user.Has30DayStreakReward = true;
+            }
+
+            await _userManager.UpdateAsync(user);
+            await _context.SaveChangesAsync();
+
+            // Chuẩn bị model cho trang kết quả (view sẽ tạo ở bước kế tiếp)
+            var resultVm = new LearnLangs.ViewModels.QuizResultVM
+            {
+                LessonId = lesson.Id,
+                LessonTitle = lesson.Title,
+                Correct = correct,
+                Total = vm.Questions.Count,
+                XpAwarded = lesson.XpReward
+            };
+
+            return View("QuizResult", resultVm); // View chưa tạo, đừng submit quiz vội ở bước này
+        }
+
+
+
+
+
+
+
         // POST: Lessons/CompleteLesson
         [HttpPost]
         [ValidateAntiForgeryToken]
