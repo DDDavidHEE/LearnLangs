@@ -1,5 +1,5 @@
 using LearnLangs.Data;
-using LearnLangs.Models;                 
+using LearnLangs.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,17 +12,22 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-// Identity (use ApplicationUser, not IdentityUser)
+// Identity (ApplicationUser + Roles)
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false; // easier for local dev
 })
+.AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
+// ==== Seed sample data (course/lesson/questions) ====
+await SeedData.EnsureSeededAsync(app.Services);
+// ==== Seed Admin user & role (dev) ====
+await IdentitySeed.EnsureAdminAsync(app.Services);
 // Pipeline
 if (app.Environment.IsDevelopment())
 {
@@ -39,7 +44,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthentication();                
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
@@ -47,4 +52,6 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 app.MapRazorPages();
 
+
+await SeedData.EnsureSeededAsync(app.Services);
 app.Run();

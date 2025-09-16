@@ -1,0 +1,98 @@
+﻿@model LearnLangs.Models.Question
+
+@{
+    ViewData["Title"] = "Create Question";
+}
+
+<h1>Create Question</h1>
+
+<h4>Question</h4>
+<hr />
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <!-- Hidden field for LessonId -->
+            <input type="hidden" asp-for="LessonId" value="@ViewData["courseId"]" />
+
+            <!-- Lesson Dropdown (if you want it to be dynamic) -->
+            <div class="form-group">
+                <label asp-for="LessonId" class="control-label"></label>
+                <select asp-for="LessonId" class="form-control" asp-items="ViewBag.LessonId"></select>
+                <span asp-validation-for="LessonId" class="text-danger"></span>
+            </div>
+
+            <!-- Prompt -->
+            <div class="form-group">
+                <label asp-for="Prompt" class="control-label"></label>
+                <input asp-for="Prompt" class="form-control" />
+                <span asp-validation-for="Prompt" class="text-danger"></span>
+            </div>
+
+            <!-- IsMultipleChoice -->
+            <div class="form-group form-check">
+                <input asp-for="IsMultipleChoice" class="form-check-input" />
+                <label asp-for="IsMultipleChoice" class="form-check-label">Multiple Choice</label>
+            </div>
+
+            <!-- Options A-D -->
+            <div class="form-group">
+                <label asp-for="OptionA" class="control-label"></label>
+                <input asp-for="OptionA" class="form-control" />
+                <span asp-validation-for="OptionA" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="OptionB" class="control-label"></label>
+                <input asp-for="OptionB" class="form-control" />
+                <span asp-validation-for="OptionB" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="OptionC" class="control-label"></label>
+                <input asp-for="OptionC" class="form-control" />
+                <span asp-validation-for="OptionC" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="OptionD" class="control-label"></label>
+                <input asp-for="OptionD" class="form-control" />
+                <span asp-validation-for="OptionD" class="text-danger"></span>
+            </div>
+
+            <!-- Correct Answer -->
+            <div class="form-group">
+                <label asp-for="CorrectAnswer" class="control-label"></label>
+                <input asp-for="CorrectAnswer" class="form-control" />
+                <span asp-validation-for="CorrectAnswer" class="text-danger"></span>
+            </div>
+
+            <!-- Short Answer -->
+            <div class="form-group">
+                <label asp-for="ShortAnswer" class="control-label"></label>
+                <input asp-for="ShortAnswer" class="form-control" />
+                <span asp-validation-for="ShortAnswer" class="text-danger"></span>
+            </div>
+
+            <!-- Fill In The Blank -->
+            <div class="form-group">
+                <label asp-for="FillInTheBlankAnswer" class="control-label"></label>
+                <input asp-for="FillInTheBlankAnswer" class="form-control" />
+                <span asp-validation-for="FillInTheBlankAnswer" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mt-2">
+                <input type="submit" value="Create" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

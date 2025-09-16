@@ -64,7 +64,6 @@ namespace LearnLangs.Controllers
             var lesson = await _context.Lessons
                 .AsNoTracking()
                 .FirstOrDefaultAsync(l => l.Id == lessonId);
-
             if (lesson == null) return NotFound();
 
             var questions = await _context.Questions
@@ -72,6 +71,13 @@ namespace LearnLangs.Controllers
                 .Where(q => q.LessonId == lessonId)
                 .OrderBy(q => q.Id)
                 .ToListAsync();
+
+            // Guard: nếu chưa có câu hỏi -> quay lại trang bài học và hiển thị cảnh báo
+            if (questions.Count == 0)
+            {
+                TempData["LessonMsg"] = "This lesson has no questions yet.";
+                return RedirectToAction(nameof(Details), new { id = lessonId, courseId = lesson.CourseId });
+            }
 
             var vm = new TakeQuizVM
             {
@@ -91,6 +97,7 @@ namespace LearnLangs.Controllers
 
             return View(vm);
         }
+
 
         // POST: Lessons/TakeQuiz
         [HttpPost]

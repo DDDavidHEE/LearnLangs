@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace LearnLangs.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public class QuestionsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -125,6 +125,7 @@ namespace LearnLangs.Controllers
 
             var question = await _context.Questions
                 .Include(q => q.Lesson)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(q => q.Id == id);
 
             if (question == null) return NotFound();

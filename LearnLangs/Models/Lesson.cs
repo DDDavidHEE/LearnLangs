@@ -12,7 +12,7 @@ namespace LearnLangs.Models
         public Course Course { get; set; } = default!;
 
         [Required, MaxLength(120)]
-        public string Title { get; set; }
+        public string Title { get; set; } = string.Empty;
 
         public int OrderIndex { get; set; }
         public int XpReward { get; set; } = 10;

@@ -2,8 +2,8 @@
 
 @{
     ViewData["Title"] = "Course Details";
-    // Sau này nếu dùng role Admin, có thể đổi thành: bool canEdit = User.IsInRole("Admin");
-    bool canEdit = User.Identity?.IsAuthenticated ?? false;
+    // Chỉ Admin mới được tạo/sửa/xóa
+    bool canEdit = User.IsInRole("Admin");
 }
 
 @if (TempData["CourseMsg"] != null)
