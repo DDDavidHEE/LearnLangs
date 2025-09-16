@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using LearnLangs.ViewModels;
 
 namespace LearnLangs.Controllers
 {
@@ -52,6 +53,50 @@ namespace LearnLangs.Controllers
             ViewBag.CourseId = courseId ?? lesson.CourseId;
             return View(lesson);
         }
+
+
+
+
+        [HttpGet]
+        public async Task<IActionResult> TakeQuiz(int lessonId)
+        {
+            // Lấy thông tin bài học
+            var lesson = await _context.Lessons
+                .AsNoTracking()
+                .FirstOrDefaultAsync(l => l.Id == lessonId);
+
+            if (lesson == null) return NotFound();
+
+            // Lấy danh sách câu hỏi thuộc bài học
+            var questions = await _context.Questions
+                .AsNoTracking()
+                .Where(q => q.LessonId == lessonId)
+                .OrderBy(q => q.Id)
+                .ToListAsync();
+
+            // Map sang ViewModel
+            var vm = new TakeQuizVM
+            {
+                LessonId = lesson.Id,
+                LessonTitle = lesson.Title,
+                Questions = questions.Select(q => new QuizQuestionVM
+                {
+                    QuestionId = q.Id,
+                    Prompt = q.Prompt,
+                    IsMultipleChoice = q.IsMultipleChoice,
+                    OptionA = q.OptionA,
+                    OptionB = q.OptionB,
+                    OptionC = q.OptionC,
+                    OptionD = q.OptionD
+                }).ToList()
+            };
+
+            return View(vm); // (View chưa có – sẽ tạo ở Bước 3)
+        }
+
+
+
+
 
         // POST: Lessons/CompleteLesson
         [HttpPost]
