@@ -1,0 +1,35 @@
+﻿@model IEnumerable<LearnLangs.Models.Question>
+@{
+    ViewData["Title"] = "Questions";
+}
+<h1>Questions</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Create New</a>
+</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Lesson</th>
+            <th>Prompt</th>
+            <th>Type</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Lesson?.Title</td>
+                <td>@item.Prompt</td>
+                <td>@(item.IsMultipleChoice ? "Multiple Choice" : "Free Text")</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
