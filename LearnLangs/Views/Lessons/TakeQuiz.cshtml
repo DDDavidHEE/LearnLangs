@@ -1,0 +1,70 @@
+﻿@model LearnLangs.ViewModels.TakeQuizVM
+@{
+    ViewData["Title"] = "Take Quiz";
+}
+
+<h2 class="mb-3">@Model.LessonTitle – Quiz</h2>
+
+<form asp-action="TakeQuiz" method="post" class="mt-3">
+    @Html.AntiForgeryToken()
+
+    <input type="hidden" asp-for="LessonId" />
+
+    <ol class="list-group list-group-numbered">
+        @for (int i = 0; i < Model.Questions.Count; i++)
+        {
+            var q = Model.Questions[i];
+            <li class="list-group-item mb-3">
+                <input type="hidden" name="Questions[@i].QuestionId" value="@q.QuestionId" />
+                <input type="hidden" name="Questions[@i].IsMultipleChoice" value="@q.IsMultipleChoice" />
+
+                <div class="fw-semibold mb-2">@q.Prompt</div>
+
+                @if (q.IsMultipleChoice)
+                {
+                    <div class="ms-3">
+                        @if (!string.IsNullOrWhiteSpace(q.OptionA))
+                        {
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="Questions[@i].UserAnswer" value="A" id="q@q.QuestionId-a">
+                                <label class="form-check-label" for="q@q.QuestionId-a">A. @q.OptionA</label>
+                            </div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(q.OptionB))
+                        {
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="Questions[@i].UserAnswer" value="B" id="q@q.QuestionId-b">
+                                <label class="form-check-label" for="q@q.QuestionId-b">B. @q.OptionB</label>
+                            </div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(q.OptionC))
+                        {
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="Questions[@i].UserAnswer" value="C" id="q@q.QuestionId-c">
+                                <label class="form-check-label" for="q@q.QuestionId-c">C. @q.OptionC</label>
+                            </div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(q.OptionD))
+                        {
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="Questions[@i].UserAnswer" value="D" id="q@q.QuestionId-d">
+                                <label class="form-check-label" for="q@q.QuestionId-d">D. @q.OptionD</label>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="ms-3">
+                        <input class="form-control" name="Questions[@i].UserAnswer" placeholder="Type your answer..." />
+                    </div>
+                }
+            </li>
+        }
+    </ol>
+
+    <div class="mt-3 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Submit</button>
+        <a asp-action="Details" asp-route-id="@Model.LessonId" class="btn btn-secondary">Back</a>
+    </div>
+</form>
