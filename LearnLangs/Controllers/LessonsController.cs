@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using LearnLangs.Data;
 using LearnLangs.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -12,7 +13,7 @@ using LearnLangs.ViewModels;
 
 namespace LearnLangs.Controllers
 {
-    [Authorize] // <-- require login for all lesson pages
+    [Authorize] // yêu cầu đăng nhập cho toàn bộ trang Lessons
     public class LessonsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -34,6 +35,7 @@ namespace LearnLangs.Controllers
             var lessons = await _context.Lessons
                 .Where(l => l.CourseId == courseId)
                 .OrderBy(l => l.OrderIndex)
+                .AsNoTracking()
                 .ToListAsync();
 
             return View(lessons);
@@ -46,6 +48,7 @@ namespace LearnLangs.Controllers
 
             var lesson = await _context.Lessons
                 .Include(l => l.Course)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (lesson == null) return NotFound();
@@ -54,27 +57,22 @@ namespace LearnLangs.Controllers
             return View(lesson);
         }
 
-
-
-
+        // GET: Lessons/TakeQuiz?lessonId=123
         [HttpGet]
         public async Task<IActionResult> TakeQuiz(int lessonId)
         {
-            // Lấy thông tin bài học
             var lesson = await _context.Lessons
                 .AsNoTracking()
                 .FirstOrDefaultAsync(l => l.Id == lessonId);
 
             if (lesson == null) return NotFound();
 
-            // Lấy danh sách câu hỏi thuộc bài học
             var questions = await _context.Questions
                 .AsNoTracking()
                 .Where(q => q.LessonId == lessonId)
                 .OrderBy(q => q.Id)
                 .ToListAsync();
 
-            // Map sang ViewModel
             var vm = new TakeQuizVM
             {
                 LessonId = lesson.Id,
@@ -91,19 +89,14 @@ namespace LearnLangs.Controllers
                 }).ToList()
             };
 
-            return View(vm); // (View chưa có – sẽ tạo ở Bước 3)
+            return View(vm);
         }
-
-
-
-
 
         // POST: Lessons/TakeQuiz
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> TakeQuiz(LearnLangs.ViewModels.TakeQuizVM vm)
+        public async Task<IActionResult> TakeQuiz(TakeQuizVM vm)
         {
-            // Không dựa vào ModelState, luôn xử lý
             if (vm == null) return BadRequest();
 
             // Lấy bài học
@@ -112,15 +105,15 @@ namespace LearnLangs.Controllers
                 .FirstOrDefaultAsync(l => l.Id == vm.LessonId);
             if (lesson == null) return NotFound();
 
-            // Nạp câu hỏi thật từ DB (tránh thiếu OptionA-D/Prompt khi trả view)
+            // Nạp câu hỏi thật từ DB
             var dbQuestions = await _context.Questions
                 .AsNoTracking()
                 .Where(q => q.LessonId == vm.LessonId)
                 .OrderBy(q => q.Id)
                 .ToListAsync();
 
-            // Map đáp án người dùng theo QuestionId
-            var answersById = (vm.Questions ?? new List<LearnLangs.ViewModels.QuizQuestionVM>())
+            // Map đáp án người dùng (tránh null)
+            var answersById = (vm.Questions ?? new System.Collections.Generic.List<QuizQuestionVM>())
                 .ToDictionary(x => x.QuestionId, x => (x.UserAnswer ?? "").Trim());
 
             // Chấm điểm
@@ -149,10 +142,16 @@ namespace LearnLangs.Controllers
                 }
             }
 
-            // Lưu tiến độ UserLesson
+            // ---- Chỉ pass khi đúng hết ----
+            int total = dbQuestions.Count;
+            bool passed = (total > 0 && correct == total);
+
+            // Lấy user & bản ghi UserLesson
             var user = await _userManager.GetUserAsync(User);
             var userLesson = await _context.UserLessons
                 .FirstOrDefaultAsync(ul => ul.UserId == user.Id && ul.LessonId == vm.LessonId);
+
+            bool alreadyCompleted = userLesson?.IsCompleted == true;
 
             if (userLesson == null)
             {
@@ -164,85 +163,83 @@ namespace LearnLangs.Controllers
                 _context.UserLessons.Add(userLesson);
             }
 
+            // Lưu điểm lần làm này
             userLesson.Score = correct;
-            userLesson.IsCompleted = true;
-            userLesson.CompletedOn = DateTime.UtcNow;
 
-            // Cộng XP & streak theo XpReward của lesson
-            var today = DateTime.UtcNow.Date;
-            var last = user.LastActiveDate?.Date;
-
-            if (last == today)
+            // Chỉ đánh dấu hoàn thành & thời điểm khi LẦN ĐẦU pass
+            if (!alreadyCompleted && passed)
             {
-                // đã hoạt động hôm nay
-            }
-            else if (last == today.AddDays(-1))
-            {
-                user.CurrentStreak += 1;
-            }
-            else
-            {
-                user.CurrentStreak = 1;
+                userLesson.IsCompleted = true;
+                userLesson.CompletedOn = DateTime.UtcNow;
             }
 
-            user.LastActiveDate = today;
-            user.TotalXP += lesson.XpReward;
+            // Chỉ cộng XP khi lần này pass và trước đó chưa hoàn thành
+            int xpEarned = (!alreadyCompleted && passed) ? lesson.XpReward : 0;
 
-            // mốc thưởng streak
-            if (user.CurrentStreak >= 7 && !user.Has7DayStreakReward)
+            if (xpEarned > 0)
             {
-                user.TotalXP += 50;
-                user.Has7DayStreakReward = true;
-            }
-            if (user.CurrentStreak >= 30 && !user.Has30DayStreakReward)
-            {
-                user.TotalXP += 100;
-                user.Has30DayStreakReward = true;
+                var today = DateTime.UtcNow.Date;
+                var last = user.LastActiveDate?.Date;
+
+                if (last == today)
+                {
+                    // đã hoạt động hôm nay
+                }
+                else if (last == today.AddDays(-1))
+                {
+                    user.CurrentStreak += 1;
+                }
+                else
+                {
+                    user.CurrentStreak = 1;
+                }
+
+                user.LastActiveDate = today;
+                user.TotalXP += xpEarned;
+
+                // Thưởng streak
+                if (user.CurrentStreak >= 7 && !user.Has7DayStreakReward)
+                {
+                    user.TotalXP += 50;
+                    user.Has7DayStreakReward = true;
+                }
+                if (user.CurrentStreak >= 30 && !user.Has30DayStreakReward)
+                {
+                    user.TotalXP += 100;
+                    user.Has30DayStreakReward = true;
+                }
+
+                await _userManager.UpdateAsync(user);
             }
 
-            await _userManager.UpdateAsync(user);
             await _context.SaveChangesAsync();
 
-            // Trả trang kết quả
-            var resultVm = new LearnLangs.ViewModels.QuizResultVM
+            // Trả view kết quả
+            ViewBag.CourseId = lesson.CourseId;
+            var resultVm = new QuizResultVM
             {
                 LessonId = lesson.Id,
                 LessonTitle = lesson.Title,
                 Correct = correct,
-                Total = dbQuestions.Count,
-                XpAwarded = lesson.XpReward
+                Total = total,
+                XpAwarded = xpEarned
             };
 
-            ViewBag.CourseId = lesson.CourseId;
             return View("QuizResult", resultVm);
-
         }
 
-
-
-
-
-
-
-        // POST: Lessons/CompleteLesson
+        // POST: Lessons/CompleteLesson (đã vô hiệu hoá: chuyển sang làm quiz)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult CompleteLesson(int lessonId)
         {
-            // Legacy endpoint disabled: quiz is now required before awarding XP.
-            // Redirect user to the quiz for this lesson.
             return RedirectToAction(nameof(TakeQuiz), new { lessonId });
         }
-
-
-
 
         // GET: Lessons/Create
         public IActionResult Create(int? courseId)
         {
             ViewBag.CourseId = courseId;
-
-            // preselect course if provided
             ViewData["CourseId"] = new SelectList(_context.Courses, "Id", "Name", courseId);
             return View();
         }
@@ -261,8 +258,6 @@ namespace LearnLangs.Controllers
 
             _context.Add(lesson);
             await _context.SaveChangesAsync();
-
-            // return to the lessons list for this course
             return RedirectToAction(nameof(Index), new { courseId = lesson.CourseId });
         }
 
@@ -315,6 +310,7 @@ namespace LearnLangs.Controllers
 
             var lesson = await _context.Lessons
                 .Include(l => l.Course)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (lesson == null) return NotFound();
