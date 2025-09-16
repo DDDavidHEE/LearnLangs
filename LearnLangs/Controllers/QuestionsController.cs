@@ -21,9 +21,16 @@ namespace LearnLangs.Controllers
         // GET: Questions
         public async Task<IActionResult> Index()
         {
-            var questions = await _context.Questions.Include(q => q.Lesson).ToListAsync();
+            var questions = await _context.Questions
+                .Include(q => q.Lesson)                 
+                .AsNoTracking()
+                .OrderBy(q => q.LessonId)
+                .ThenBy(q => q.Id)
+                .ToListAsync();
+
             return View(questions);
         }
+
 
         // GET: Questions/Create
         public IActionResult Create()
