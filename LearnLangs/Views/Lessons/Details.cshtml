@@ -37,14 +37,34 @@
     </dl>
 </div>
 
+
+
+
+
+
+
+
+
+
+
 <!-- Add Complete Lesson Button -->
-<div>
-    <form asp-action="CompleteLesson" asp-route-lessonId="@Model.Id" method="post">
-        <button type="submit" class="btn btn-success">Complete Lesson</button>
-    </form>
+<div class="mt-3 d-flex gap-2">
+    <a asp-action="TakeQuiz"
+       asp-route-lessonId="@Model.Id"
+       class="btn btn-success">
+        Start Quiz
+    </a>
+
+    <a asp-action="Index"
+       asp-route-courseId="@Model.CourseId"
+       class="btn btn-secondary">
+        Back to Lessons
+    </a>
+
+    <a asp-action="Edit"
+       asp-route-id="@Model.Id"
+       class="btn btn-outline-secondary">
+        Edit
+    </a>
 </div>
 
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div>
