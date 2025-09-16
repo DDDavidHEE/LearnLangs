@@ -213,7 +213,9 @@ namespace LearnLangs.Controllers
                 XpAwarded = lesson.XpReward
             };
 
+            ViewBag.CourseId = lesson.CourseId;
             return View("QuizResult", resultVm);
+
         }
 
 
