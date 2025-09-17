@@ -1,50 +1,38 @@
 ﻿@model LearnLangs.Models.Lesson
-
 @{
-    ViewData["Title"] = "Lesson Details";
-    var courseId = (ViewBag.CourseId as int?) ?? Model.CourseId;
-    // hoặc đổi thành: bool canEdit = User.IsInRole("Admin");
-    bool canEdit = User.Identity?.IsAuthenticated ?? false;
+    ViewData["Title"] = "Details";
+    bool isAdmin = User.IsInRole("Admin");
 }
 
-@if (TempData["LessonMsg"] != null)
-{
-    <div class="alert alert-warning">@TempData["LessonMsg"]</div>
-}
-
-<h1>@Model.Title</h1>
+<h1>Lesson</h1>
 <hr />
-
 <dl class="row">
     <dt class="col-sm-2">Course</dt>
     <dd class="col-sm-10">@Model.Course?.Name</dd>
 
+    <dt class="col-sm-2">Title</dt>
+    <dd class="col-sm-10">@Model.Title</dd>
+
     <dt class="col-sm-2">Order</dt>
     <dd class="col-sm-10">@Model.OrderIndex</dd>
 
-    <dt class="col-sm-2">XP Reward</dt>
+    <dt class="col-sm-2">XP</dt>
     <dd class="col-sm-10">@Model.XpReward</dd>
 </dl>
 
 <div class="mt-3 d-flex gap-2">
     <a asp-action="TakeQuiz"
        asp-route-lessonId="@Model.Id"
-       class="btn btn-success">
-        Start Quiz
-    </a>
+       class="btn btn-success">Start Quiz</a>
 
     <a asp-action="Index"
-       asp-route-courseId="@courseId"
-       class="btn btn-secondary">
-        Back to Lessons
-    </a>
+       asp-route-courseId="@Model.CourseId"
+       class="btn btn-secondary">Back to Lessons</a>
 
-    @if (canEdit)
+    @if (isAdmin)
     {
         <a asp-action="Edit"
            asp-route-id="@Model.Id"
-           class="btn btn-outline-primary">
-            Edit
-        </a>
+           class="btn btn-outline-secondary">Edit</a>
     }
 </div>

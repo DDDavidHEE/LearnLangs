@@ -2,41 +2,41 @@
 
 @{
     ViewData["Title"] = "Lessons";
-    var courseId = (ViewBag.CourseId as int?) ?? 0;
-
-    // Nếu đã bật phân quyền theo vai trò, có thể đổi thành:
-    // bool canEdit = User.IsInRole("Admin");
-    bool canEdit = User.Identity?.IsAuthenticated ?? false;
+    var courseId = (int)ViewBag.CourseId;
+    bool isAdmin = User.IsInRole("Admin");   // chỉ admin mới thấy nút CRUD
 }
 
 <h2>Lessons</h2>
 
-<p class="mb-2">
-    <a asp-controller="Courses" asp-action="Index" class="btn btn-outline-secondary">← Back to Courses</a>
+<p>
+    <a asp-controller="Courses"
+       asp-action="Details"
+       asp-route-id="@courseId"
+       class="btn btn-outline-secondary">← Back to Course</a>
 </p>
 
-@if (canEdit)
+@if (isAdmin)
 {
     <p>
-        <a asp-action="Create" asp-route-courseId="@courseId" class="btn btn-primary">Create New</a>
+        <a asp-action="Create"
+           asp-route-courseId="@courseId"
+           class="btn btn-primary">Create Lesson</a>
     </p>
 }
 
 <table class="table table-striped">
     <thead>
         <tr>
-            <th>@Html.DisplayNameFor(model => model.First().Course)</th>
-            <th>@Html.DisplayNameFor(model => model.First().Title)</th>
-            <th>@Html.DisplayNameFor(model => model.First().OrderIndex)</th>
-            <th>@Html.DisplayNameFor(model => model.First().XpReward)</th>
+            <th>Title</th>
+            <th>Order</th>
+            <th>XP</th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in Model)
+        @foreach (var item in (Model ?? Enumerable.Empty<LearnLangs.Models.Lesson>()))
         {
             <tr>
-                <td>@item.Course?.Name</td>
                 <td>@item.Title</td>
                 <td>@item.OrderIndex</td>
                 <td>@item.XpReward</td>
@@ -44,8 +44,7 @@
                     <a asp-action="Details"
                        asp-route-id="@item.Id"
                        asp-route-courseId="@courseId">Details</a>
-
-                    @if (canEdit)
+                    @if (isAdmin)
                     {
                         @: | <a asp-action="Edit" asp-route-id="@item.Id">Edit</a>
                         @: | <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
