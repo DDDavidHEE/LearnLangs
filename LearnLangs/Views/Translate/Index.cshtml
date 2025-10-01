@@ -1,0 +1,62 @@
+﻿@{
+    ViewData["Title"] = "Translate";
+
+    // nhận từ controller
+    var langs = ViewBag.Langs as IEnumerable<(string Code, string Name)>
+                ?? Array.Empty<(string, string)>();
+    string detected = ViewBag.Detected as string ?? "";
+    string output = ViewBag.OutputText as string ?? "";
+    string inputTextValue = ViewBag.InputText as string ?? "";   // <-- lấy từ ViewBag
+}
+
+<div class="container-xxl">
+    <h4 class="mb-3">Translate</h4>
+
+    <form method="post" class="row g-3">
+        <div class="col-md-3">
+            <label class="form-label">From</label>
+            <select name="from" class="form-select">
+                @foreach (var item in langs)
+                {
+                    var code = item.Code;
+                    var name = item.Name;
+                    <option value="@code" selected="@(code == "auto")">@name</option>
+                }
+            </select>
+            @if (!string.IsNullOrEmpty(detected))
+            {
+                <div class="form-text">Detected: <b>@detected</b></div>
+            }
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">To</label>
+            <select name="to" class="form-select">
+                @foreach (var item in langs)
+                {
+                    var code = item.Code;
+                    var name = item.Name;
+                    if (code == "auto") { continue; }
+                    <option value="@code" selected="@(code == "en")">@name</option>
+                }
+            </select>
+        </div>
+
+        <div class="col-12"></div>
+
+        <div class="col-md-6">
+            <label class="form-label">Input</label>
+            <textarea name="inputText" class="form-control" rows="8" placeholder="Type or paste text here...">@inputTextValue</textarea>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Output</label>
+            <textarea class="form-control" rows="8" readonly>@output</textarea>
+        </div>
+
+        <div class="col-12 d-flex gap-2">
+            <button class="btn btn-primary" type="submit">Translate</button>
+        </div>
+        @Html.AntiForgeryToken()
+    </form>
+</div>

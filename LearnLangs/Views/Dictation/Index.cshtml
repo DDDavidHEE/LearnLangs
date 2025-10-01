@@ -1,0 +1,22 @@
+﻿@model IEnumerable<LearnLangs.Models.Dictation.DictationTopic>
+@{
+    ViewData["Title"] = "Dictation – Topics";
+}
+<h3 class="mb-3">Dictation – Topics</h3>
+
+<div class="row g-3">
+    @foreach (var t in Model)
+    {
+        <div class="col-md-6 col-lg-4">
+            <a class="card h-100 text-decoration-none" asp-action="Topic" asp-route-id="@t.Id">
+                <div class="card-body d-flex gap-3 align-items-center">
+                    <img src="@(!string.IsNullOrWhiteSpace(t.CoverUrl)?t.CoverUrl:"/img/placeholder.png")" width="56" height="56" class="rounded" />
+                    <div>
+                        <div class="fw-semibold">@t.Title</div>
+                        <small class="text-muted">@t.Sets.Count set(s)</small>
+                    </div>
+                </div>
+            </a>
+        </div>
+    }
+</div>

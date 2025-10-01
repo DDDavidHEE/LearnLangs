@@ -3,52 +3,52 @@
 @{
     ViewData["Title"] = "Lessons";
     var courseId = (int)ViewBag.CourseId;
+    bool isAdmin = User.IsInRole("Admin");   // chỉ admin mới thấy nút CRUD
 }
 
 <h2>Lessons</h2>
+
 <p>
-    <a asp-controller="Courses" asp-action="Index" class="btn btn-outline-secondary">← Back to Courses</a>
+    <a asp-controller="Courses"
+       asp-action="Details"
+       asp-route-id="@courseId"
+       class="btn btn-outline-secondary">← Back to Course</a>
 </p>
 
-<!-- List of Lessons -->
-<table class="table">
+@if (isAdmin)
+{
+    <p>
+        <a asp-action="Create"
+           asp-route-courseId="@courseId"
+           class="btn btn-primary">Create Lesson</a>
+    </p>
+}
+
+<table class="table table-striped">
     <thead>
         <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Course)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Title)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.OrderIndex)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.XpReward)
-            </th>
+            <th>Title</th>
+            <th>Order</th>
+            <th>XP</th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in Model)
+        @foreach (var item in (Model ?? Enumerable.Empty<LearnLangs.Models.Lesson>()))
         {
             <tr>
+                <td>@item.Title</td>
+                <td>@item.OrderIndex</td>
+                <td>@item.XpReward</td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.Course.Name)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Title)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.OrderIndex)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.XpReward)
-                </td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                    <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                    <a asp-action="Details"
+                       asp-route-id="@item.Id"
+                       asp-route-courseId="@courseId">Details</a>
+                    @if (isAdmin)
+                    {
+                        @: | <a asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                        @: | <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                    }
                 </td>
             </tr>
         }

@@ -1,0 +1,39 @@
+﻿@model LearnLangs.Models.PronunciationInputModel
+@{
+    ViewData["Title"] = "Pronunciation Assessment";
+}
+<h2>@ViewData["Title"]</h2>
+
+<p>
+    Enter the sentence to be read and upload the audio file. The system will automatically convert to WAV (mono, 16kHz) before grading.
+</p>
+
+<form asp-action="Assess" asp-controller="Pronunciation" method="post" enctype="multipart/form-data">
+    @* Token chống CSRF sẽ được tự động chèn bởi Tag Helper *@
+
+    <div class="mb-3">
+        <label asp-for="ReferenceText" class="form-label"></label>
+        <textarea asp-for="ReferenceText" rows="2" class="form-control" required
+                  placeholder='Ví dụ: "Good morning, how are you today?"'></textarea>
+        <span asp-validation-for="ReferenceText" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="AudioFile" class="form-label"></label>
+        <input asp-for="AudioFile"
+               type="file"
+               accept=".wav,.mp3,.m4a,audio/*"
+               class="form-control"
+               required />
+        <div class="form-text">
+            Accept: WAV/MP3/M4A… (maximum ~20MB). The system will automatically standardize the format.
+        </div>
+        <span asp-validation-for="AudioFile" class="text-danger"></span>
+    </div>
+
+    <button class="btn btn-primary" type="submit">Scoring</button>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

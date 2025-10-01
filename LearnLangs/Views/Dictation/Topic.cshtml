@@ -1,0 +1,25 @@
+﻿@model LearnLangs.Models.Dictation.DictationTopic
+@{
+    ViewData["Title"] = "Dictation – " + Model.Title;
+}
+<nav class="mb-3">
+    <a asp-action="Index" class="text-decoration-none">&larr; All topics</a>
+</nav>
+
+<h3 class="mb-3">@Model.Title</h3>
+
+<div class="list-group">
+    @foreach (var s in Model.Sets.OrderBy(s => s.Title))
+    {
+        <a class="list-group-item list-group-item-action" asp-action="Set" asp-route-id="@s.Id">
+            <div class="d-flex justify-content-between">
+                <div class="fw-semibold">@s.Title</div>
+                <small class="text-muted">@s.Items.Count item(s)</small>
+            </div>
+            @if (!string.IsNullOrEmpty(s.Level))
+            {
+                <small class="text-muted">Level: @s.Level</small>
+            }
+        </a>
+    }
+</div>

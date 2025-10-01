@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using LearnLangs.Data;
 using LearnLangs.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -8,10 +9,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using LearnLangs.ViewModels;
 
 namespace LearnLangs.Controllers
 {
-    [Authorize] // <-- require login for all lesson pages
+    [Authorize] // yêu cầu đăng nhập cho toàn bộ trang Lessons
     public class LessonsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -33,6 +35,7 @@ namespace LearnLangs.Controllers
             var lessons = await _context.Lessons
                 .Where(l => l.CourseId == courseId)
                 .OrderBy(l => l.OrderIndex)
+                .AsNoTracking()
                 .ToListAsync();
 
             return View(lessons);
@@ -45,6 +48,7 @@ namespace LearnLangs.Controllers
 
             var lesson = await _context.Lessons
                 .Include(l => l.Course)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (lesson == null) return NotFound();
@@ -53,67 +57,177 @@ namespace LearnLangs.Controllers
             return View(lesson);
         }
 
-        // POST: Lessons/CompleteLesson
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CompleteLesson(int lessonId)
+        // GET: Lessons/TakeQuiz?lessonId=123
+        [HttpGet]
+        public async Task<IActionResult> TakeQuiz(int lessonId)
         {
-            // Get the current logged-in user
-            var user = await _userManager.GetUserAsync(User);
+            var lesson = await _context.Lessons
+                .AsNoTracking()
+                .FirstOrDefaultAsync(l => l.Id == lessonId);
+            if (lesson == null) return NotFound();
 
-            // Find the lesson by its ID
-            var lesson = await _context.Lessons.FindAsync(lessonId);
-            if (lesson == null)
+            var questions = await _context.Questions
+                .AsNoTracking()
+                .Where(q => q.LessonId == lessonId)
+                .OrderBy(q => q.Id)
+                .ToListAsync();
+
+            if (questions.Count == 0)
             {
-                return NotFound();
+                TempData["LessonMsg"] = "This lesson has no questions yet.";
+                return RedirectToAction(nameof(Details), new { id = lessonId, courseId = lesson.CourseId });
             }
 
-            // Add XP for completing this lesson (10 XP for simplicity)
-            user.TotalXP += 10;
-
-            // Set the user's last active date to today
-            user.LastActiveDate = DateTime.Now;
-
-            // Check if the user has completed lessons on consecutive days
-            if (user.LastActiveDate.HasValue && user.LastActiveDate.Value.Date == DateTime.Now.Date.AddDays(-1))
+            var vm = new TakeQuizVM
             {
-                // Increase streak if it's consecutive days
-                user.CurrentStreak++;
-            }
-            else
-            {
-                // Reset streak if the user skipped a day
-                user.CurrentStreak = 1;
-            }
+                LessonId = lesson.Id,
+                LessonTitle = lesson.Title,
+                Questions = questions.Select(q => new QuizQuestionVM
+                {
+                    QuestionId = q.Id,
+                    Prompt = q.Prompt,
+                    IsMultipleChoice = q.IsMultipleChoice,
+                    OptionA = q.OptionA,
+                    OptionB = q.OptionB,
+                    OptionC = q.OptionC,
+                    OptionD = q.OptionD
+                }).ToList()
+            };
 
-            // Check for milestone streak rewards
-            if (user.CurrentStreak == 7 && !user.Has7DayStreakReward)
-            {
-                user.TotalXP += 50;  // Reward for 7-day streak
-                user.Has7DayStreakReward = true;  // Mark the reward as given
-            }
-            else if (user.CurrentStreak == 30 && !user.Has30DayStreakReward)
-            {
-                user.TotalXP += 100;  // Reward for 30-day streak
-                user.Has30DayStreakReward = true;  // Mark the reward as given
-            }
-
-            // Save the updated user data
-            await _userManager.UpdateAsync(user);
-
-            // Redirect to the lessons index for the course
-            return RedirectToAction("Index", new { courseId = lesson.CourseId });
+            return View(vm);
         }
 
+        // POST: Lessons/TakeQuiz
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> TakeQuiz(TakeQuizVM vm)
+        {
+            if (vm == null) return BadRequest();
 
+            var lesson = await _context.Lessons
+                .AsNoTracking()
+                .FirstOrDefaultAsync(l => l.Id == vm.LessonId);
+            if (lesson == null) return NotFound();
 
+            var dbQuestions = await _context.Questions
+                .AsNoTracking()
+                .Where(q => q.LessonId == vm.LessonId)
+                .OrderBy(q => q.Id)
+                .ToListAsync();
+
+            var answersById = (vm.Questions ?? new List<QuizQuestionVM>())
+                .ToDictionary(x => x.QuestionId, x => (x.UserAnswer ?? "").Trim());
+
+            int correct = 0;
+            foreach (var q in dbQuestions)
+            {
+                answersById.TryGetValue(q.Id, out var ans);
+                ans = (ans ?? "").Trim();
+
+                if (q.IsMultipleChoice)
+                {
+                    if (!string.IsNullOrWhiteSpace(ans) &&
+                        string.Equals(ans, q.CorrectAnswer, StringComparison.OrdinalIgnoreCase))
+                    {
+                        correct++;
+                    }
+                }
+                else
+                {
+                    var corr = (q.ShortAnswer ?? q.FillInTheBlankAnswer ?? "").Trim();
+                    if (!string.IsNullOrEmpty(corr) &&
+                        string.Equals(ans, corr, StringComparison.OrdinalIgnoreCase))
+                    {
+                        correct++;
+                    }
+                }
+            }
+
+            int total = dbQuestions.Count;
+            bool passed = (total > 0 && correct == total);
+
+            var user = await _userManager.GetUserAsync(User);
+            var userLesson = await _context.UserLessons
+                .FirstOrDefaultAsync(ul => ul.UserId == user.Id && ul.LessonId == vm.LessonId);
+
+            bool alreadyCompleted = userLesson?.IsCompleted == true;
+
+            if (userLesson == null)
+            {
+                userLesson = new UserLesson
+                {
+                    UserId = user.Id,
+                    LessonId = vm.LessonId
+                };
+                _context.UserLessons.Add(userLesson);
+            }
+
+            userLesson.Score = correct;
+
+            if (!alreadyCompleted && passed)
+            {
+                userLesson.IsCompleted = true;
+                userLesson.CompletedOn = DateTime.UtcNow;
+            }
+
+            int xpEarned = (!alreadyCompleted && passed) ? lesson.XpReward : 0;
+
+            if (xpEarned > 0)
+            {
+                var today = DateTime.UtcNow.Date;
+                var last = user.LastActiveDate?.Date;
+
+                if (last == today) { }
+                else if (last == today.AddDays(-1)) user.CurrentStreak += 1;
+                else user.CurrentStreak = 1;
+
+                user.LastActiveDate = today;
+                user.TotalXP += xpEarned;
+
+                if (user.CurrentStreak >= 7 && !user.Has7DayStreakReward)
+                {
+                    user.TotalXP += 50;
+                    user.Has7DayStreakReward = true;
+                }
+                if (user.CurrentStreak >= 30 && !user.Has30DayStreakReward)
+                {
+                    user.TotalXP += 100;
+                    user.Has30DayStreakReward = true;
+                }
+
+                await _userManager.UpdateAsync(user);
+            }
+
+            await _context.SaveChangesAsync();
+
+            ViewBag.CourseId = lesson.CourseId;
+            var resultVm = new QuizResultVM
+            {
+                LessonId = lesson.Id,
+                LessonTitle = lesson.Title,
+                Correct = correct,
+                Total = total,
+                XpAwarded = xpEarned
+            };
+
+            return View("QuizResult", resultVm);
+        }
+
+        // POST: Lessons/CompleteLesson (đã vô hiệu hoá: chuyển sang làm quiz)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult CompleteLesson(int lessonId)
+        {
+            return RedirectToAction(nameof(TakeQuiz), new { lessonId });
+        }
+
+        // ================== ADMIN ONLY (CRUD) ==================
 
         // GET: Lessons/Create
+        [Authorize(Roles = "Admin")]
         public IActionResult Create(int? courseId)
         {
             ViewBag.CourseId = courseId;
-
-            // preselect course if provided
             ViewData["CourseId"] = new SelectList(_context.Courses, "Id", "Name", courseId);
             return View();
         }
@@ -121,8 +235,20 @@ namespace LearnLangs.Controllers
         // POST: Lessons/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([Bind("Id,CourseId,Title,OrderIndex,XpReward")] Lesson lesson)
         {
+            if (lesson.OrderIndex < 1)
+                ModelState.AddModelError(nameof(lesson.OrderIndex), "Order must be >= 1.");
+            if (lesson.XpReward < 1)
+                ModelState.AddModelError(nameof(lesson.XpReward), "XP must be >= 1.");
+
+            bool dupOrderCreate = await _context.Lessons
+                .AsNoTracking()
+                .AnyAsync(l => l.CourseId == lesson.CourseId && l.OrderIndex == lesson.OrderIndex);
+            if (dupOrderCreate)
+                ModelState.AddModelError(nameof(lesson.OrderIndex), "Order already used in this course.");
+
             if (!ModelState.IsValid)
             {
                 ViewData["CourseId"] = new SelectList(_context.Courses, "Id", "Name", lesson.CourseId);
@@ -132,12 +258,11 @@ namespace LearnLangs.Controllers
 
             _context.Add(lesson);
             await _context.SaveChangesAsync();
-
-            // return to the lessons list for this course
             return RedirectToAction(nameof(Index), new { courseId = lesson.CourseId });
         }
 
         // GET: Lessons/Edit/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -153,9 +278,21 @@ namespace LearnLangs.Controllers
         // POST: Lessons/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id, [Bind("Id,CourseId,Title,OrderIndex,XpReward")] Lesson lesson)
         {
             if (id != lesson.Id) return NotFound();
+
+            if (lesson.OrderIndex < 1)
+                ModelState.AddModelError(nameof(lesson.OrderIndex), "Order must be >= 1.");
+            if (lesson.XpReward < 1)
+                ModelState.AddModelError(nameof(lesson.XpReward), "XP must be >= 1.");
+
+            bool dupOrderEdit = await _context.Lessons
+                .AsNoTracking()
+                .AnyAsync(l => l.CourseId == lesson.CourseId && l.OrderIndex == lesson.OrderIndex && l.Id != lesson.Id);
+            if (dupOrderEdit)
+                ModelState.AddModelError(nameof(lesson.OrderIndex), "Order already used in this course.");
 
             if (!ModelState.IsValid)
             {
@@ -171,8 +308,7 @@ namespace LearnLangs.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Lessons.Any(e => e.Id == lesson.Id))
-                    return NotFound();
+                if (!_context.Lessons.Any(e => e.Id == lesson.Id)) return NotFound();
                 throw;
             }
 
@@ -180,12 +316,14 @@ namespace LearnLangs.Controllers
         }
 
         // GET: Lessons/Delete/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
 
             var lesson = await _context.Lessons
                 .Include(l => l.Course)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (lesson == null) return NotFound();
@@ -197,6 +335,7 @@ namespace LearnLangs.Controllers
         // POST: Lessons/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var lesson = await _context.Lessons.FindAsync(id);
@@ -207,7 +346,6 @@ namespace LearnLangs.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index), new { courseId });
             }
-
             return RedirectToAction(nameof(Index));
         }
     }

@@ -1,0 +1,92 @@
+﻿@model LearnLangs.Models.SettingsViewModel
+@{
+    ViewData["Title"] = "Settings";
+    var tLangs = ViewBag.TranslateLangs as IEnumerable<(string Code, string Name)> ?? Array.Empty<(string, string)>();
+    var pLangs = ViewBag.PronunLangs as IEnumerable<(string Code, string Name)> ?? Array.Empty<(string, string)>();
+}
+
+<div class="container-xxl">
+    <h4 class="mb-3">Settings</h4>
+
+    @if (TempData["SettingsSaved"] is bool b && b)
+    {
+        <div class="alert alert-success">Saved!</div>
+    }
+
+    <form method="post" class="row g-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-white"><b>Appearance</b></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Theme</label>
+                            <select asp-for="PreferredUiTheme" class="form-select">
+                                <option value="light">Light</option>
+                                <option value="dark">Dark</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-white"><b>Translate</b></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Default From</label>
+                            <select asp-for="From" class="form-select">
+                                @foreach (var l in tLangs)
+                                {
+                                    <option value="@l.Code">@l.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Default To</label>
+                            <select asp-for="To" class="form-select">
+                                @foreach (var l in tLangs)
+                                {
+                                    if (l.Code == "auto") { continue; }
+                                    <option value="@l.Code">@l.Name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-white"><b>Pronunciation</b></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Default Recognition Language</label>
+                            <select asp-for="PronunciationLang" class="form-select">
+                                @foreach (var l in pLangs)
+                                {
+                                    <option value="@l.Code">@l.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6 form-check mt-4">
+                            <input class="form-check-input" type="checkbox" asp-for="ShowPronunciationRawJson" id="chkRaw" />
+                            <label class="form-check-label" for="chkRaw">Show raw JSON (debug) on result page</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 d-flex gap-2">
+            <button class="btn btn-primary" type="submit">Save</button>
+            <a class="btn btn-outline-secondary" asp-controller="Home" asp-action="Index">Cancel</a>
+        </div>
+        @Html.AntiForgeryToken()
+    </form>
+</div>

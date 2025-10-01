@@ -1,50 +1,38 @@
 ﻿@model LearnLangs.Models.Lesson
-
 @{
     ViewData["Title"] = "Details";
+    bool isAdmin = User.IsInRole("Admin");
 }
 
-<h1>Details</h1>
+<h1>Lesson</h1>
+<hr />
+<dl class="row">
+    <dt class="col-sm-2">Course</dt>
+    <dd class="col-sm-10">@Model.Course?.Name</dd>
 
-<div>
-    <h4>Lesson</h4>
-    <hr />
-    <dl class="row">
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Course)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Course.Name)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Title)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Title)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.OrderIndex)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.OrderIndex)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.XpReward)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.XpReward)
-        </dd>
-    </dl>
-</div>
+    <dt class="col-sm-2">Title</dt>
+    <dd class="col-sm-10">@Model.Title</dd>
 
-<!-- Add Complete Lesson Button -->
-<div>
-    <form asp-action="CompleteLesson" asp-route-lessonId="@Model.Id" method="post">
-        <button type="submit" class="btn btn-success">Complete Lesson</button>
-    </form>
-</div>
+    <dt class="col-sm-2">Order</dt>
+    <dd class="col-sm-10">@Model.OrderIndex</dd>
 
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+    <dt class="col-sm-2">XP</dt>
+    <dd class="col-sm-10">@Model.XpReward</dd>
+</dl>
+
+<div class="mt-3 d-flex gap-2">
+    <a asp-action="TakeQuiz"
+       asp-route-lessonId="@Model.Id"
+       class="btn btn-success">Start Quiz</a>
+
+    <a asp-action="Index"
+       asp-route-courseId="@Model.CourseId"
+       class="btn btn-secondary">Back to Lessons</a>
+
+    @if (isAdmin)
+    {
+        <a asp-action="Edit"
+           asp-route-id="@Model.Id"
+           class="btn btn-outline-secondary">Edit</a>
+    }
 </div>

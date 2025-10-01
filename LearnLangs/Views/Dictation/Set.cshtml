@@ -1,0 +1,317 @@
+﻿@model LearnLangs.Models.Dictation.DictationSet
+@{
+    ViewData["Title"] = Model?.Title ?? "Dictation";
+    var items = (Model?.Items ?? new List<LearnLangs.Models.Dictation.DictationItem>())
+                .OrderBy(x => x.OrderIndex).ToList();
+}
+
+<!-- Fallback style nhỏ (nếu bạn đã thêm các class .dic-* vào site.css thì phần này có thể bỏ) -->
+<style>
+    .d-row {
+        display: none;
+    }
+
+        .d-row.active {
+            display: block;
+        }
+
+    .dic-card {
+        background: var(--bs-body-bg);
+        border: 1px solid var(--bs-border-color);
+        border-radius: 1rem;
+        padding: 1.25rem;
+        box-shadow: 0 4px 18px rgba(0,0,0,.05);
+    }
+
+    .dic-toolbar {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        margin-bottom: .75rem;
+    }
+
+    .dic-play {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        border: 1px solid var(--bs-border-color);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bs-body-bg);
+    }
+
+    .dic-title {
+        font-weight: 600;
+        color: var(--bs-emphasis-color);
+    }
+
+    .dic-input {
+        border-radius: .75rem;
+        padding: .85rem 1rem;
+        font-size: 1.05rem;
+    }
+
+    .dic-actions {
+        display: flex;
+        gap: .5rem;
+        margin-top: .75rem;
+    }
+
+    .dic-feedback {
+        margin-top: .5rem;
+        min-height: 2rem;
+    }
+
+        .dic-feedback .feedback {
+            min-height: 1.25rem;
+            font-weight: 600;
+        }
+
+        .dic-feedback .hint {
+            min-height: 1.1rem;
+            color: var(--bs-secondary-color);
+            font-style: italic;
+        }
+
+    .vi-line {
+        min-height: 1.25rem;
+        color: var(--bs-secondary);
+    }
+
+    .dic-nextbar {
+        display: flex;
+        justify-content: flex-end;
+        border-top: 1px dashed var(--bs-border-color);
+        margin-top: .75rem;
+        padding-top: .75rem;
+    }
+</style>
+
+<div class="container-xxl">
+    <h3 class="mb-3">@ViewData["Title"]</h3>
+
+    @if (!items.Any())
+    {
+        <div class="alert alert-info">No sentences found.</div>
+    }
+    else
+    {
+        <!-- THÊM data-set-id để biết set đang luyện -->
+        <div id="dictation-list" class="dic-list" data-set-id="@Model.Id">
+            @foreach (var it in items)
+            {
+                <div class="dic-card d-row" data-item-id="@it.Id">
+                    <div class="dic-toolbar">
+                        <button type="button"
+                                class="dic-play"
+                                title="Play"
+                                aria-label="Play sentence"
+                                data-audio="@it.AudioUrl">
+                            ▶
+                        </button>
+                        <div class="dic-title">Sentence @it.OrderIndex</div>
+                    </div>
+
+                    <!-- Đáp án chuẩn để show khi cần -->
+                    <div class="answer d-none" data-answer="@it.Transcript"></div>
+
+                    <div class="dic-input-wrap">
+                        <input class="form-control dic-input input"
+                               placeholder="Type what you hear…" autocomplete="off" />
+                    </div>
+
+                    <div class="dic-actions">
+                        <button class="btn btn-success check" type="button">
+                            Check <span class="d-none d-md-inline">(Enter)</span>
+                        </button>
+                        <button class="btn btn-outline-secondary show-answer" type="button">
+                            Show full answer
+                        </button>
+                    </div>
+
+                    <div class="dic-feedback">
+                        <div class="feedback"></div>
+                        <div class="hint"></div>
+                        <div class="vi-line"></div>
+                    </div>
+
+                    <div class="dic-nextbar">
+                        <button class="btn btn-primary btn-next d-none" type="button">Next</button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+          const audio = new Audio();
+
+          const listEl = document.getElementById('dictation-list');
+          const setId = Number(listEl?.dataset.setId || 0);        // <-- lấy setId để cộng XP
+          const rows = Array.from(document.querySelectorAll('#dictation-list .d-row'));
+
+          // chỉ hiển thị câu đầu tiên
+          if (rows.length) rows[0].classList.add('active');
+
+          // helpers
+          function setBusy(btn, busy) {
+            if (!btn) return;
+            btn.disabled = !!busy;
+            btn.classList.toggle('disabled', !!busy);
+          }
+
+          async function translate(text) {
+            const res = await fetch('/Dictation/Translate?text=' + encodeURIComponent(text || ''));
+            if (!res.ok) return '';
+            const data = await res.json();
+            return data?.vi ?? '';
+          }
+
+          async function showTranslation(row, sourceText) {
+            const viEl = row.querySelector('.vi-line');
+            if (!viEl) return;
+            viEl.textContent = '';
+            if (!sourceText) return;
+            viEl.textContent = '…';
+            try {
+              const vi = await translate(sourceText);
+              viEl.textContent = vi ? ('→ ' + vi) : '';
+            } catch {
+              viEl.textContent = '';
+            }
+          }
+
+          function showNext(row) {
+            const btnNext = row.querySelector('.btn-next');
+            if (btnNext) btnNext.classList.remove('d-none');
+          }
+
+          // GỌI API cộng XP khi hoàn tất + cập nhật badge XP
+          async function finishSet() {
+            try {
+              const res = await fetch(`/Dictation/Complete?setId=${setId}`, { method: 'POST' });
+              const data = await res.json().catch(() => ({}));
+              // cập nhật nhanh XP trên navbar nếu có class .xp-badge
+              const xpBadge = document.querySelector('.xp-badge');
+              if (xpBadge && data && typeof data.totalXp === 'number') {
+                xpBadge.textContent = `XP: ${data.totalXp}`;
+              }
+            } catch { /* bỏ qua lỗi mạng */ }
+
+            const ok = document.createElement('div');
+            ok.className = 'alert alert-success mt-3';
+            ok.textContent = 'Great job! You finished this set 🎉 (+20 XP)';
+            document.querySelector('.container-xxl')?.appendChild(ok);
+          }
+
+          function gotoNext(currentRow) {
+            const idx = rows.indexOf(currentRow);
+            if (idx < 0) return;
+            currentRow.classList.remove('active');
+
+            const next = rows[idx + 1];
+            if (next) {
+              next.classList.add('active');
+              const input = next.querySelector('.input');
+              input?.focus();
+              // auto play nếu muốn:
+              // const url = next.querySelector('.dic-play')?.dataset?.audio;
+              // if (url) { audio.src = url; audio.play().catch(()=>{}); }
+            } else {
+              // hết bài → cộng XP
+              finishSet();
+            }
+          }
+
+          // bind từng câu
+          rows.forEach(row => {
+            const itemId      = Number(row.dataset.itemId || 0);
+            const playBtn     = row.querySelector('.dic-play');
+            const input       = row.querySelector('.input');
+            const checkBtn    = row.querySelector('.check');
+            const showBtn     = row.querySelector('.show-answer');
+            const ansNode     = row.querySelector('.answer');
+            const feedback    = row.querySelector('.feedback');
+            const hint        = row.querySelector('.hint');
+            const nextBtn     = row.querySelector('.btn-next');
+
+            // play
+            playBtn?.addEventListener('click', () => {
+              const url = playBtn.dataset.audio;
+              if (!url) return;
+              audio.src = url;
+              audio.play().catch(()=>{});
+            });
+
+            async function doCheck() {
+              if (!itemId) return;
+              const text = (input.value || '').trim();
+              if (!text) {
+                feedback.className = 'feedback text-danger';
+                feedback.textContent = 'Please type something.';
+                hint.textContent = '';
+                return;
+              }
+
+              setBusy(checkBtn, true);
+              try {
+                const form = new FormData();
+                form.append('itemId', itemId);
+                form.append('answer', text);
+                const res = await fetch('/Dictation/Check', { method:'POST', body: form });
+                const data = await res.json(); // {correct, expected, hint?}
+
+                if (data.correct) {
+                  feedback.className = 'feedback text-success';
+                  feedback.textContent = 'Correct! 🎉';
+                  hint.textContent = '';
+                  await showTranslation(row, text || data.expected);
+                  showNext(row);
+                } else {
+                  feedback.className = 'feedback text-danger';
+                  feedback.textContent = 'Try again.';
+                  const h = data.hint;
+                  if (h) {
+                    const idx = (h.index ?? 0) + 1;
+                    const pv  = h.preview ?? '';
+                    const len = h.length ?? 0;
+                    const reason = h.reason ?? '';
+                    hint.textContent = `Hint: word #${idx} ${pv ? `starts with "${pv}"` : ""} ${len ? `(${len} letters)` : ""}. ${reason}`;
+                  } else {
+                    hint.textContent = '';
+                  }
+                }
+              } finally {
+                setBusy(checkBtn, false);
+              }
+            }
+
+            checkBtn?.addEventListener('click', doCheck);
+
+            input?.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter') { e.preventDefault(); doCheck(); }
+              else if (e.key === 'Control') {
+                const url = playBtn?.dataset?.audio;
+                if (url) { audio.src = url; audio.play().catch(()=>{}); }
+              }
+            });
+
+            // show full answer + dịch + bật Next
+            showBtn?.addEventListener('click', async () => {
+              const full = ansNode?.dataset?.answer || '';
+              feedback.className = 'feedback text-muted';
+              feedback.textContent = full || '(no answer)';
+              hint.textContent = '';
+              await showTranslation(row, full);
+              showNext(row);
+            });
+
+            nextBtn?.addEventListener('click', () => gotoNext(row));
+          });
+        })();
+    </script>
+}

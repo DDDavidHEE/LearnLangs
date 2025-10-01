@@ -1,0 +1,96 @@
+﻿@model LearnLangs.Models.Question
+@{
+    ViewData["Title"] = "Question Details";
+}
+
+<h1>Question Details</h1>
+<hr />
+
+@functions {
+    // Hiển thị "A. <text>" theo CorrectAnswer
+    string CorrectChoiceText()
+    {
+        var letter = (Model.CorrectAnswer ?? "").Trim().ToUpperInvariant();
+        return letter switch
+        {
+            "A" => $"A. {Model.OptionA}",
+            "B" => $"B. {Model.OptionB}",
+            "C" => $"C. {Model.OptionC}",
+            "D" => $"D. {Model.OptionD}",
+            _ => letter
+        };
+    }
+}
+
+<div>
+    <h4>@Model.Prompt</h4>
+    <hr />
+    <dl class="row">
+        <!-- Lesson Information -->
+        <dt class="col-sm-2">Lesson</dt>
+        <dd class="col-sm-10">@Model.Lesson?.Title ?? "No Lesson"</dd>
+
+        <!-- Prompt -->
+        <dt class="col-sm-2">Prompt</dt>
+        <dd class="col-sm-10">@Model.Prompt</dd>
+
+        <!-- Is Multiple Choice -->
+        <dt class="col-sm-2">Is Multiple Choice?</dt>
+        <dd class="col-sm-10">@(Model.IsMultipleChoice ? "Yes" : "No")</dd>
+
+        <!-- Options A-D -->
+        @if (Model.IsMultipleChoice)
+        {
+            <dt class="col-sm-2">Option A</dt>
+            <dd class="col-sm-10">@Model.OptionA</dd>
+
+            <dt class="col-sm-2">Option B</dt>
+            <dd class="col-sm-10">@Model.OptionB</dd>
+
+            <dt class="col-sm-2">Option C</dt>
+            <dd class="col-sm-10">@Model.OptionC</dd>
+
+            <dt class="col-sm-2">Option D</dt>
+            <dd class="col-sm-10">@Model.OptionD</dd>
+        }
+
+        <!-- Answer (ẩn với non-admin) -->
+        @if (User.IsInRole("Admin"))
+        {
+            <dt class="col-sm-2">Correct Answer</dt>
+            <dd class="col-sm-10">
+                @if (Model.IsMultipleChoice)
+                {
+                    @CorrectChoiceText()
+                }
+                else
+                {
+                    @(Model.ShortAnswer ?? Model.FillInTheBlankAnswer)
+                }
+            </dd>
+
+            @* Chỉ admin mới thấy các trường tự luận đầy đủ *@
+            @if (!string.IsNullOrEmpty(Model.ShortAnswer))
+            {
+                <dt class="col-sm-2">Short Answer</dt>
+                <dd class="col-sm-10">@Model.ShortAnswer</dd>
+            }
+            @if (!string.IsNullOrEmpty(Model.FillInTheBlankAnswer))
+            {
+                <dt class="col-sm-2">Fill in the Blank Answer</dt>
+                <dd class="col-sm-10">@Model.FillInTheBlankAnswer</dd>
+            }
+        }
+        else
+        {
+            <dt class="col-sm-2">Answer</dt>
+            <dd class="col-sm-10"><em>Hidden (Admin only)</em></dd>
+        }
+    </dl>
+</div>
+
+<!-- Action Buttons -->
+<div class="d-flex gap-2">
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</div>

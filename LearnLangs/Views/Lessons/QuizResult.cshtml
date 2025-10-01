@@ -1,0 +1,28 @@
+﻿@model LearnLangs.ViewModels.QuizResultVM
+@{
+    ViewData["Title"] = "Quiz Result";
+}
+
+<h2 class="mb-3">Result – @Model.LessonTitle</h2>
+
+<div class="alert alert-info">
+    <div class="fw-bold fs-5">@Model.Correct / @Model.Total</div>
+    <div>You earned <strong>@Model.XpAwarded</strong> XP.</div>
+</div>
+
+<div class="d-flex gap-2">
+    <a asp-action="Details"
+       asp-route-id="@Model.LessonId"
+       class="btn btn-primary">
+        Back to Lesson
+    </a>
+
+    <a asp-controller="Lessons"
+       asp-action="Index"
+       asp-route-courseId="@ViewBag.CourseId"
+       class="btn btn-secondary">
+        Back to Lessons
+    </a>
+</div>
+
+

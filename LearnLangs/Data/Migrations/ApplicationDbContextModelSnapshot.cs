@@ -37,6 +37,15 @@ namespace LearnLangs.Data.Migrations
                     b.Property<int>("CurrentStreak")
                         .HasColumnType("int");
 
+                    b.Property<string>("DefaultPronunciationLang")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DefaultTranslateFrom")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DefaultTranslateTo")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -76,8 +85,14 @@ namespace LearnLangs.Data.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<string>("PreferredUiTheme")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("ShowPronunciationRawJson")
+                        .HasColumnType("bit");
 
                     b.Property<int>("TotalXP")
                         .HasColumnType("int");
@@ -129,7 +144,168 @@ namespace LearnLangs.Data.Migrations
                             Id = 1,
                             Description = "Basics of Spanish",
                             Name = "Spanish – Beginner"
+                        },
+                        new
+                        {
+                            Id = 100,
+                            Description = "Beginner Mandarin: greetings, numbers, self-intro with pinyin.",
+                            Name = "Chinese course"
                         });
+                });
+
+            modelBuilder.Entity("LearnLangs.Models.Dictation.DictationItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AudioUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Hint")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("OrderIndex")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SetId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Transcript")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SetId", "OrderIndex");
+
+                    b.ToTable("DictationItems");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 2101,
+                            AudioUrl = "/audio/demo1.mp3",
+                            OrderIndex = 1,
+                            SetId = 2100,
+                            Transcript = "I've been meaning to ask you for some advice about restaurants."
+                        },
+                        new
+                        {
+                            Id = 2102,
+                            AudioUrl = "/audio/demo2.mp3",
+                            OrderIndex = 2,
+                            SetId = 2100,
+                            Transcript = "I need to book somewhere to celebrate my sister's thirtieth birthday."
+                        });
+                });
+
+            modelBuilder.Entity("LearnLangs.Models.Dictation.DictationSet", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Level")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("OrderIndex")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TopicId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TopicId", "OrderIndex");
+
+                    b.ToTable("DictationSets");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 2100,
+                            Level = "B2",
+                            OrderIndex = 1,
+                            Title = "Cam 20 – Test 1 – Part 1 (Demo)",
+                            TopicId = 2000
+                        });
+                });
+
+            modelBuilder.Entity("LearnLangs.Models.Dictation.DictationTopic", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CoverUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DictationTopics");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 2000,
+                            CoverUrl = "/img/ielts.png",
+                            Description = "Mini demo",
+                            Title = "IELTS Listening (Demo)"
+                        });
+                });
+
+            modelBuilder.Entity("LearnLangs.Models.Dictation.UserDictationProgress", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CorrectCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("LastIndex")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SetId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalCount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "SetId")
+                        .IsUnique();
+
+                    b.ToTable("UserDictationProgresses");
                 });
 
             modelBuilder.Entity("LearnLangs.Models.Lesson", b =>
@@ -148,8 +324,8 @@ namespace LearnLangs.Data.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("nvarchar(120)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<int>("XpReward")
                         .HasColumnType("int");
@@ -177,6 +353,30 @@ namespace LearnLangs.Data.Migrations
                             OrderIndex = 2,
                             Title = "Numbers",
                             XpReward = 10
+                        },
+                        new
+                        {
+                            Id = 101,
+                            CourseId = 100,
+                            OrderIndex = 1,
+                            Title = "Lesson 1 – Greetings",
+                            XpReward = 30
+                        },
+                        new
+                        {
+                            Id = 102,
+                            CourseId = 100,
+                            OrderIndex = 2,
+                            Title = "Lesson 2 – Numbers 1–10",
+                            XpReward = 30
+                        },
+                        new
+                        {
+                            Id = 103,
+                            CourseId = 100,
+                            OrderIndex = 3,
+                            Title = "Lesson 3 – Self-Introduction",
+                            XpReward = 40
                         });
                 });
 
@@ -251,6 +451,186 @@ namespace LearnLangs.Data.Migrations
                             OptionC = "Three",
                             OptionD = "Four",
                             Prompt = "Dos = ?"
+                        },
+                        new
+                        {
+                            Id = 1001,
+                            CorrectAnswer = "B",
+                            IsMultipleChoice = true,
+                            LessonId = 101,
+                            OptionA = "Tạm biệt",
+                            OptionB = "Xin chào",
+                            OptionC = "Cảm ơn",
+                            OptionD = "Xin lỗi",
+                            Prompt = "“你好” nghĩa là gì?"
+                        },
+                        new
+                        {
+                            Id = 1002,
+                            CorrectAnswer = "A",
+                            IsMultipleChoice = true,
+                            LessonId = 101,
+                            OptionA = "Chào buổi sáng",
+                            OptionB = "Chúc ngủ ngon",
+                            OptionC = "Chúc mừng",
+                            OptionD = "Hẹn gặp lại",
+                            Prompt = "“早上好” nghĩa là…"
+                        },
+                        new
+                        {
+                            Id = 1003,
+                            CorrectAnswer = "B",
+                            IsMultipleChoice = true,
+                            LessonId = 101,
+                            OptionA = "Bạn tên gì?",
+                            OptionB = "Bạn khỏe không?",
+                            OptionC = "Bạn ở đâu?",
+                            OptionD = "Bạn bao nhiêu tuổi?",
+                            Prompt = "“你好吗？” nghĩa là…"
+                        },
+                        new
+                        {
+                            Id = 1004,
+                            CorrectAnswer = "A",
+                            IsMultipleChoice = true,
+                            LessonId = 101,
+                            OptionA = "我很好，谢谢。",
+                            OptionB = "对不起。",
+                            OptionC = "再见。",
+                            OptionD = "没关系。",
+                            Prompt = "Trả lời lịch sự cho “你好吗？”"
+                        },
+                        new
+                        {
+                            Id = 1005,
+                            CorrectAnswer = "B",
+                            IsMultipleChoice = true,
+                            LessonId = 101,
+                            OptionA = "Cảm ơn",
+                            OptionB = "Tạm biệt",
+                            OptionC = "Xin chào",
+                            OptionD = "Không sao",
+                            Prompt = "“再见” nghĩa là…"
+                        },
+                        new
+                        {
+                            Id = 1011,
+                            CorrectAnswer = "B",
+                            IsMultipleChoice = true,
+                            LessonId = 102,
+                            OptionA = "3",
+                            OptionB = "4",
+                            OptionC = "5",
+                            OptionD = "6",
+                            Prompt = "Số “四” là số nào?"
+                        },
+                        new
+                        {
+                            Id = 1012,
+                            CorrectAnswer = "A",
+                            IsMultipleChoice = true,
+                            LessonId = 102,
+                            OptionA = "bā",
+                            OptionB = "bá",
+                            OptionC = "bǎ",
+                            OptionD = "bà",
+                            Prompt = "Pinyin đúng của “八” là…"
+                        },
+                        new
+                        {
+                            Id = 1013,
+                            CorrectAnswer = "D",
+                            IsMultipleChoice = true,
+                            LessonId = 102,
+                            OptionA = "6",
+                            OptionB = "7",
+                            OptionC = "8",
+                            OptionD = "9",
+                            Prompt = "“九” là…"
+                        },
+                        new
+                        {
+                            Id = 1014,
+                            CorrectAnswer = "A",
+                            IsMultipleChoice = true,
+                            LessonId = 102,
+                            OptionA = "六",
+                            OptionB = "九",
+                            OptionC = "二",
+                            OptionD = "十",
+                            Prompt = "“liù” viết Hán tự là…"
+                        },
+                        new
+                        {
+                            Id = 1015,
+                            CorrectAnswer = "C",
+                            IsMultipleChoice = true,
+                            LessonId = 102,
+                            OptionA = "百",
+                            OptionB = "千",
+                            OptionC = "十",
+                            OptionD = "万",
+                            Prompt = "Số “10” trong tiếng Trung là…"
+                        },
+                        new
+                        {
+                            Id = 1021,
+                            CorrectAnswer = "C",
+                            IsMultipleChoice = true,
+                            LessonId = 103,
+                            OptionA = "Nói tuổi",
+                            OptionB = "Nói quê quán",
+                            OptionC = "Nói tên",
+                            OptionD = "Nói nghề nghiệp",
+                            Prompt = "“我叫…” dùng khi nào?"
+                        },
+                        new
+                        {
+                            Id = 1022,
+                            CorrectAnswer = "A",
+                            IsMultipleChoice = true,
+                            LessonId = 103,
+                            OptionA = "你叫什么名字？",
+                            OptionB = "你多大？",
+                            OptionC = "你来自哪里？",
+                            OptionD = "你做什么工作？",
+                            Prompt = "Câu hỏi để hỏi tên người khác:"
+                        },
+                        new
+                        {
+                            Id = 1023,
+                            CorrectAnswer = "A",
+                            IsMultipleChoice = true,
+                            LessonId = 103,
+                            OptionA = "Tôi đến từ Việt Nam",
+                            OptionB = "Tôi yêu Việt Nam",
+                            OptionC = "Tôi ở Việt Nam",
+                            OptionD = "Tôi nói tiếng Việt",
+                            Prompt = "“我来自越南。” nghĩa là…"
+                        },
+                        new
+                        {
+                            Id = 1024,
+                            CorrectAnswer = "B",
+                            IsMultipleChoice = true,
+                            LessonId = 103,
+                            OptionA = "I am a teacher",
+                            OptionB = "I am a student",
+                            OptionC = "I am from China",
+                            OptionD = "My name is…",
+                            Prompt = "“我是学生。” tương đương…"
+                        },
+                        new
+                        {
+                            Id = 1025,
+                            CorrectAnswer = "C",
+                            IsMultipleChoice = true,
+                            LessonId = 103,
+                            OptionA = "Cảm ơn",
+                            OptionB = "Xin lỗi",
+                            OptionC = "Rất vui được gặp bạn",
+                            OptionD = "Hẹn gặp lại",
+                            Prompt = "“很高兴认识你。” nghĩa là…"
                         });
                 });
 
@@ -282,7 +662,8 @@ namespace LearnLangs.Data.Migrations
 
                     b.HasIndex("LessonId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId", "LessonId")
+                        .IsUnique();
 
                     b.ToTable("UserLessons");
                 });
@@ -424,6 +805,28 @@ namespace LearnLangs.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("LearnLangs.Models.Dictation.DictationItem", b =>
+                {
+                    b.HasOne("LearnLangs.Models.Dictation.DictationSet", "Set")
+                        .WithMany("Items")
+                        .HasForeignKey("SetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Set");
+                });
+
+            modelBuilder.Entity("LearnLangs.Models.Dictation.DictationSet", b =>
+                {
+                    b.HasOne("LearnLangs.Models.Dictation.DictationTopic", "Topic")
+                        .WithMany("Sets")
+                        .HasForeignKey("TopicId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Topic");
+                });
+
             modelBuilder.Entity("LearnLangs.Models.Lesson", b =>
                 {
                     b.HasOne("LearnLangs.Models.Course", "Course")
@@ -449,7 +852,7 @@ namespace LearnLangs.Data.Migrations
             modelBuilder.Entity("LearnLangs.Models.UserLesson", b =>
                 {
                     b.HasOne("LearnLangs.Models.Lesson", "Lesson")
-                        .WithMany("UserLessons")
+                        .WithMany()
                         .HasForeignKey("LessonId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -521,11 +924,19 @@ namespace LearnLangs.Data.Migrations
                     b.Navigation("Lessons");
                 });
 
+            modelBuilder.Entity("LearnLangs.Models.Dictation.DictationSet", b =>
+                {
+                    b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("LearnLangs.Models.Dictation.DictationTopic", b =>
+                {
+                    b.Navigation("Sets");
+                });
+
             modelBuilder.Entity("LearnLangs.Models.Lesson", b =>
                 {
                     b.Navigation("Questions");
-
-                    b.Navigation("UserLessons");
                 });
 #pragma warning restore 612, 618
         }
