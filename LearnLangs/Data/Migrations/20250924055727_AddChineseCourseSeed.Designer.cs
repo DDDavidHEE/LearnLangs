@@ -4,6 +4,7 @@ using LearnLangs.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LearnLangs.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250924055727_AddChineseCourseSeed")]
+    partial class AddChineseCourseSeed
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -36,15 +39,6 @@ namespace LearnLangs.Data.Migrations
 
                     b.Property<int>("CurrentStreak")
                         .HasColumnType("int");
-
-                    b.Property<string>("DefaultPronunciationLang")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DefaultTranslateFrom")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DefaultTranslateTo")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
@@ -85,14 +79,8 @@ namespace LearnLangs.Data.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
-                    b.Property<string>("PreferredUiTheme")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("ShowPronunciationRawJson")
-                        .HasColumnType("bit");
 
                     b.Property<int>("TotalXP")
                         .HasColumnType("int");
@@ -151,161 +139,6 @@ namespace LearnLangs.Data.Migrations
                             Description = "Beginner Mandarin: greetings, numbers, self-intro with pinyin.",
                             Name = "Chinese course"
                         });
-                });
-
-            modelBuilder.Entity("LearnLangs.Models.Dictation.DictationItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AudioUrl")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Hint")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("OrderIndex")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SetId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Transcript")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SetId", "OrderIndex");
-
-                    b.ToTable("DictationItems");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 2101,
-                            AudioUrl = "/audio/demo1.mp3",
-                            OrderIndex = 1,
-                            SetId = 2100,
-                            Transcript = "I've been meaning to ask you for some advice about restaurants."
-                        },
-                        new
-                        {
-                            Id = 2102,
-                            AudioUrl = "/audio/demo2.mp3",
-                            OrderIndex = 2,
-                            SetId = 2100,
-                            Transcript = "I need to book somewhere to celebrate my sister's thirtieth birthday."
-                        });
-                });
-
-            modelBuilder.Entity("LearnLangs.Models.Dictation.DictationSet", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Level")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("OrderIndex")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("TopicId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TopicId", "OrderIndex");
-
-                    b.ToTable("DictationSets");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 2100,
-                            Level = "B2",
-                            OrderIndex = 1,
-                            Title = "Cam 20 – Test 1 – Part 1 (Demo)",
-                            TopicId = 2000
-                        });
-                });
-
-            modelBuilder.Entity("LearnLangs.Models.Dictation.DictationTopic", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("CoverUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("DictationTopics");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 2000,
-                            CoverUrl = "/img/ielts.png",
-                            Description = "Mini demo",
-                            Title = "IELTS Listening (Demo)"
-                        });
-                });
-
-            modelBuilder.Entity("LearnLangs.Models.Dictation.UserDictationProgress", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CorrectCount")
-                        .HasColumnType("int");
-
-                    b.Property<int>("LastIndex")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SetId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TotalCount")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId", "SetId")
-                        .IsUnique();
-
-                    b.ToTable("UserDictationProgresses");
                 });
 
             modelBuilder.Entity("LearnLangs.Models.Lesson", b =>
@@ -805,28 +638,6 @@ namespace LearnLangs.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("LearnLangs.Models.Dictation.DictationItem", b =>
-                {
-                    b.HasOne("LearnLangs.Models.Dictation.DictationSet", "Set")
-                        .WithMany("Items")
-                        .HasForeignKey("SetId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Set");
-                });
-
-            modelBuilder.Entity("LearnLangs.Models.Dictation.DictationSet", b =>
-                {
-                    b.HasOne("LearnLangs.Models.Dictation.DictationTopic", "Topic")
-                        .WithMany("Sets")
-                        .HasForeignKey("TopicId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Topic");
-                });
-
             modelBuilder.Entity("LearnLangs.Models.Lesson", b =>
                 {
                     b.HasOne("LearnLangs.Models.Course", "Course")
@@ -922,16 +733,6 @@ namespace LearnLangs.Data.Migrations
             modelBuilder.Entity("LearnLangs.Models.Course", b =>
                 {
                     b.Navigation("Lessons");
-                });
-
-            modelBuilder.Entity("LearnLangs.Models.Dictation.DictationSet", b =>
-                {
-                    b.Navigation("Items");
-                });
-
-            modelBuilder.Entity("LearnLangs.Models.Dictation.DictationTopic", b =>
-                {
-                    b.Navigation("Sets");
                 });
 
             modelBuilder.Entity("LearnLangs.Models.Lesson", b =>

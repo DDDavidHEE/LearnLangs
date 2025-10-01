@@ -9,16 +9,18 @@ namespace LearnLangs.Models
 
         [Required]
         public int CourseId { get; set; }
-        public Course Course { get; set; } = default!;
 
-        [Required, MaxLength(120)]
+        [Required, StringLength(100)]
         public string Title { get; set; } = string.Empty;
 
-        public int OrderIndex { get; set; }
-        public int XpReward { get; set; } = 10;
-       
+        // Không cho trùng trong cùng Course (sẽ check ở Controller)
+        [Range(1, 1000, ErrorMessage = "Order must be between 1 and 1000.")]
+        public int OrderIndex { get; set; } = 1;
 
-        public ICollection<Question> Questions { get; set; } = new List<Question>();
-        public ICollection<UserLesson> UserLessons { get; set; } = new List<UserLesson>();
+        [Range(1, 1000, ErrorMessage = "XP must be between 1 and 1000.")]
+        public int XpReward { get; set; } = 10;
+
+        public Course? Course { get; set; }
+        public ICollection<Question>? Questions { get; set; }
     }
 }

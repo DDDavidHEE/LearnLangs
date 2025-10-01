@@ -72,7 +72,6 @@ namespace LearnLangs.Controllers
                 .OrderBy(q => q.Id)
                 .ToListAsync();
 
-            // Guard: nếu chưa có câu hỏi -> quay lại trang bài học và hiển thị cảnh báo
             if (questions.Count == 0)
             {
                 TempData["LessonMsg"] = "This lesson has no questions yet.";
@@ -98,7 +97,6 @@ namespace LearnLangs.Controllers
             return View(vm);
         }
 
-
         // POST: Lessons/TakeQuiz
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -106,24 +104,20 @@ namespace LearnLangs.Controllers
         {
             if (vm == null) return BadRequest();
 
-            // Lấy bài học
             var lesson = await _context.Lessons
                 .AsNoTracking()
                 .FirstOrDefaultAsync(l => l.Id == vm.LessonId);
             if (lesson == null) return NotFound();
 
-            // Nạp câu hỏi thật từ DB
             var dbQuestions = await _context.Questions
                 .AsNoTracking()
                 .Where(q => q.LessonId == vm.LessonId)
                 .OrderBy(q => q.Id)
                 .ToListAsync();
 
-            // Map đáp án người dùng (tránh null)
-            var answersById = (vm.Questions ?? new System.Collections.Generic.List<QuizQuestionVM>())
+            var answersById = (vm.Questions ?? new List<QuizQuestionVM>())
                 .ToDictionary(x => x.QuestionId, x => (x.UserAnswer ?? "").Trim());
 
-            // Chấm điểm
             int correct = 0;
             foreach (var q in dbQuestions)
             {
@@ -149,11 +143,9 @@ namespace LearnLangs.Controllers
                 }
             }
 
-            // ---- Chỉ pass khi đúng hết ----
             int total = dbQuestions.Count;
             bool passed = (total > 0 && correct == total);
 
-            // Lấy user & bản ghi UserLesson
             var user = await _userManager.GetUserAsync(User);
             var userLesson = await _context.UserLessons
                 .FirstOrDefaultAsync(ul => ul.UserId == user.Id && ul.LessonId == vm.LessonId);
@@ -170,17 +162,14 @@ namespace LearnLangs.Controllers
                 _context.UserLessons.Add(userLesson);
             }
 
-            // Lưu điểm lần làm này
             userLesson.Score = correct;
 
-            // Chỉ đánh dấu hoàn thành & thời điểm khi LẦN ĐẦU pass
             if (!alreadyCompleted && passed)
             {
                 userLesson.IsCompleted = true;
                 userLesson.CompletedOn = DateTime.UtcNow;
             }
 
-            // Chỉ cộng XP khi lần này pass và trước đó chưa hoàn thành
             int xpEarned = (!alreadyCompleted && passed) ? lesson.XpReward : 0;
 
             if (xpEarned > 0)
@@ -188,23 +177,13 @@ namespace LearnLangs.Controllers
                 var today = DateTime.UtcNow.Date;
                 var last = user.LastActiveDate?.Date;
 
-                if (last == today)
-                {
-                    // đã hoạt động hôm nay
-                }
-                else if (last == today.AddDays(-1))
-                {
-                    user.CurrentStreak += 1;
-                }
-                else
-                {
-                    user.CurrentStreak = 1;
-                }
+                if (last == today) { }
+                else if (last == today.AddDays(-1)) user.CurrentStreak += 1;
+                else user.CurrentStreak = 1;
 
                 user.LastActiveDate = today;
                 user.TotalXP += xpEarned;
 
-                // Thưởng streak
                 if (user.CurrentStreak >= 7 && !user.Has7DayStreakReward)
                 {
                     user.TotalXP += 50;
@@ -221,7 +200,6 @@ namespace LearnLangs.Controllers
 
             await _context.SaveChangesAsync();
 
-            // Trả view kết quả
             ViewBag.CourseId = lesson.CourseId;
             var resultVm = new QuizResultVM
             {
@@ -243,7 +221,10 @@ namespace LearnLangs.Controllers
             return RedirectToAction(nameof(TakeQuiz), new { lessonId });
         }
 
+        // ================== ADMIN ONLY (CRUD) ==================
+
         // GET: Lessons/Create
+        [Authorize(Roles = "Admin")]
         public IActionResult Create(int? courseId)
         {
             ViewBag.CourseId = courseId;
@@ -254,8 +235,20 @@ namespace LearnLangs.Controllers
         // POST: Lessons/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([Bind("Id,CourseId,Title,OrderIndex,XpReward")] Lesson lesson)
         {
+            if (lesson.OrderIndex < 1)
+                ModelState.AddModelError(nameof(lesson.OrderIndex), "Order must be >= 1.");
+            if (lesson.XpReward < 1)
+                ModelState.AddModelError(nameof(lesson.XpReward), "XP must be >= 1.");
+
+            bool dupOrderCreate = await _context.Lessons
+                .AsNoTracking()
+                .AnyAsync(l => l.CourseId == lesson.CourseId && l.OrderIndex == lesson.OrderIndex);
+            if (dupOrderCreate)
+                ModelState.AddModelError(nameof(lesson.OrderIndex), "Order already used in this course.");
+
             if (!ModelState.IsValid)
             {
                 ViewData["CourseId"] = new SelectList(_context.Courses, "Id", "Name", lesson.CourseId);
@@ -269,6 +262,7 @@ namespace LearnLangs.Controllers
         }
 
         // GET: Lessons/Edit/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -284,9 +278,21 @@ namespace LearnLangs.Controllers
         // POST: Lessons/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id, [Bind("Id,CourseId,Title,OrderIndex,XpReward")] Lesson lesson)
         {
             if (id != lesson.Id) return NotFound();
+
+            if (lesson.OrderIndex < 1)
+                ModelState.AddModelError(nameof(lesson.OrderIndex), "Order must be >= 1.");
+            if (lesson.XpReward < 1)
+                ModelState.AddModelError(nameof(lesson.XpReward), "XP must be >= 1.");
+
+            bool dupOrderEdit = await _context.Lessons
+                .AsNoTracking()
+                .AnyAsync(l => l.CourseId == lesson.CourseId && l.OrderIndex == lesson.OrderIndex && l.Id != lesson.Id);
+            if (dupOrderEdit)
+                ModelState.AddModelError(nameof(lesson.OrderIndex), "Order already used in this course.");
 
             if (!ModelState.IsValid)
             {
@@ -302,8 +308,7 @@ namespace LearnLangs.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Lessons.Any(e => e.Id == lesson.Id))
-                    return NotFound();
+                if (!_context.Lessons.Any(e => e.Id == lesson.Id)) return NotFound();
                 throw;
             }
 
@@ -311,6 +316,7 @@ namespace LearnLangs.Controllers
         }
 
         // GET: Lessons/Delete/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -329,6 +335,7 @@ namespace LearnLangs.Controllers
         // POST: Lessons/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var lesson = await _context.Lessons.FindAsync(id);
@@ -339,7 +346,6 @@ namespace LearnLangs.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index), new { courseId });
             }
-
             return RedirectToAction(nameof(Index));
         }
     }

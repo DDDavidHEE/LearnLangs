@@ -1,0 +1,55 @@
+﻿@{
+    string ctrl = (ViewContext.RouteData.Values["controller"]?.ToString() ?? "").ToLower();
+    Func<string, string> active = (c) => ctrl == c.ToLower() ? "active" : "";
+}
+
+<aside class="app-sidebar bg-white border-end">
+    <div class="p-3 pb-2 d-flex align-items-center gap-2 border-bottom">
+        <i class="bi bi-grid text-primary"></i>
+        <span class="fw-semibold">Menu</span>
+    </div>
+
+    <nav class="nav flex-column py-2">
+        <a class="nav-link @(ctrl=="translate" ? "active" : "")"
+           asp-controller="Translate" asp-action="Index">
+            <i class="bi bi-translate me-2"></i> Translate
+        </a>
+
+        <a class="nav-link @active("Vocabulary")" href="#">
+            <i class="bi bi-book me-2"></i> Vocabulary
+        </a>
+
+        <a class="nav-link @active("Conversation")" href="#">
+            <i class="bi bi-chat-dots me-2"></i> Conversation
+        </a>
+
+        <a class="nav-link @(ctrl=="dictation" ? "active" : "")" asp-controller="Dictation" asp-action="Index">
+            <i class="bi bi-pencil-square me-2"></i> Dictation
+        </a>
+
+        <a class="nav-link @(ctrl=="pronunciation" ? "active" : "")"
+           asp-controller="Pronunciation" asp-action="Index">
+            <i class="bi bi-mic me-2"></i> Pronunciation
+        </a>
+
+        <a class="nav-link @(ctrl=="flashcarddecks" ? "active" : "")"
+           asp-controller="FlashcardDecks" asp-action="Index">
+            <i class="bi bi-collection me-2"></i> Flashcards
+        </a>
+
+        <a class="nav-link @active("QuickTest")" href="#">
+            <i class="bi bi-lightning me-2"></i> Quick Test
+        </a>
+
+        <a class="nav-link @(ctrl=="courses" ? "active" : "")"
+           asp-controller="Courses" asp-action="Index">
+            <i class="bi bi-mortarboard me-2"></i> Courses
+        </a>
+
+        
+        <a class="nav-link @(ctrl=="settings" ? "active" : "")"
+           asp-controller="Settings" asp-action="Index">
+            <i class="bi bi-gear me-2"></i> Settings
+        </a>
+    </nav>
+</aside>

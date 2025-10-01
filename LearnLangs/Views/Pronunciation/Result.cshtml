@@ -1,0 +1,70 @@
+﻿@model LearnLangs.Services.Pronunciation.PronunciationResultDto
+@{
+    ViewData["Title"] = "Kết quả phát âm";
+}
+<h2>@ViewData["Title"]</h2>
+
+<div class="card p-3 mb-3">
+    <div><b>Pronunciation</b>: @Model.PronunciationScore</div>
+    <div><b>Accuracy</b>: @Model.AccuracyScore</div>
+    <div><b>Fluency</b>: @Model.FluencyScore</div>
+    <div><b>Completeness</b>: @Model.CompletenessScore</div>
+    @if (Model.ProsodyScore is not null)
+    {
+        <div><b>Prosody</b>: @Model.ProsodyScore</div>
+    }
+</div>
+
+<h4>Chi tiết từng từ</h4>
+<table class="table table-striped">
+    <thead>
+        <tr><th>#</th><th>Từ</th><th>Lỗi</th><th>Accuracy</th></tr>
+    </thead>
+    <tbody>
+        @{
+            var i = 0;
+            foreach (var w in Model.Words)
+            {
+                <tr>
+                    <td>@(++i)</td>
+                    <td>@w.Word</td>
+                    <td>@w.ErrorType</td>
+                    <td>@w.AccuracyScore</td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+<p class="mt-3">
+    <a class="btn btn-secondary" asp-controller="Pronunciation" asp-action="Index">Chấm lại</a>
+</p>
+
+@* JSON debug: chỉ hiển thị ở môi trường Development *@
+<environment include="Development">
+    @if (!string.IsNullOrWhiteSpace(Model.RawJson))
+    {
+        <details class="mt-3">
+            <summary>JSON thô (debug)</summary>
+            <pre class="small">@PrettyJson(Model.RawJson)</pre>
+        </details>
+    }
+</environment>
+
+@functions {
+    private static string PrettyJson(string json)
+    {
+        try
+        {
+            var doc = System.Text.Json.JsonDocument.Parse(json);
+            return System.Text.Json.JsonSerializer.Serialize(
+                doc.RootElement,
+                new System.Text.Json.JsonSerializerOptions { WriteIndented = true }
+            );
+        }
+        catch
+        {
+            return json; // nếu parse lỗi, trả về nguyên bản
+        }
+    }
+}
