@@ -30,14 +30,49 @@
     <!-- Topbar -->
     <nav class="navbar navbar-light bg-white border-bottom sticky-top">
         <div class="container-fluid">
+            <!-- mobile: toggle sidebar -->
             <button class="btn btn-outline-secondary d-md-none" id="btnSidebar" type="button" aria-label="Toggle menu">
                 <i class="bi bi-list"></i>
             </button>
 
+            <!-- brand -->
             <a class="navbar-brand ms-2" asp-controller="Home" asp-action="Index">
                 <i class="bi bi-play-circle-fill text-primary me-1"></i>LearnLangs
             </a>
 
+            <!-- main nav (hiển thị từ md+) -->
+            <ul class="navbar-nav flex-row d-none d-md-flex ms-3">
+                <!-- Flashcard dropdown -->
+                <li class="nav-item dropdown me-2">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        Flashcard
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item"
+                               asp-controller="Flashcards" asp-action="Index" asp-route-mode="basic">
+                                Tiếng Anh thông dụng
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item"
+                               asp-controller="Flashcards" asp-action="Index" asp-route-mode="ielts">
+                                Từ vựng IELTS
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item"
+                               asp-controller="Flashcards" asp-action="Index" asp-route-mode="hsk">
+                                Từ vựng Tiếng Trung (HSK)
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                
+            </ul>
+
+            <!-- auth / badges -->
             <div class="d-flex align-items-center gap-3 ms-auto">
                 @if (SignInManager.IsSignedIn(User))
                 {

@@ -1,0 +1,159 @@
+﻿@using LearnLangs.Models.Flashcards
+@model PlayDeckVM
+
+@{
+    ViewData["Title"] = $"Flashcard – {Model.DeckTitle}";
+}
+
+<div class="container-xxl">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h3 class="mb-0">@Model.DeckTitle</h3>
+        <div>
+            <span class="badge bg-secondary-subtle text-secondary me-2">
+                Part @Model.Part / @Model.TotalParts
+            </span>
+            <a class="btn btn-outline-secondary btn-sm" asp-action="Index" asp-route-mode="@Model.Mode">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12 col-lg-3">
+            <div class="list-group sticky-top" style="top: 6rem;">
+                @for (int p = 1; p <= Model.TotalParts; p++)
+                {
+                    <a class="list-group-item list-group-item-action @(p==Model.Part?"active":"")"
+                       asp-action="Play" asp-route-id="@Model.DeckId" asp-route-part="@p">
+                        Part @p
+                    </a>
+                }
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-9">
+            @if (!Model.Cards.Any())
+            {
+                <div class="alert alert-info">Chưa có thẻ trong phần này.</div>
+            }
+            else
+            {
+                <div id="fc-player" class="card shadow-sm">
+                    @if (!string.IsNullOrWhiteSpace(Model.CoverUrl))
+                    {
+                        <img class="card-img-top" src="@Model.CoverUrl" alt="@Model.DeckTitle" />
+                    }
+                    <div class="card-body text-center">
+                        <div id="face-front">
+                            <button id="btnSpeak" class="btn btn-outline-primary btn-sm mb-2" title="Phát âm">
+                                <i class="bi bi-volume-up"></i>
+                            </button>
+
+                            <h4 class="mb-1" id="word"></h4>
+                            <div class="text-muted" id="pos"></div>
+                            <div class="text-secondary" id="ipa"></div>
+                        </div>
+
+                        <div id="face-back" class="d-none">
+                            <h5 id="meaning" class="mb-2"></h5>
+                            <div id="ex-en" class="mb-1"></div>
+                            <div id="ex-vi" class="text-secondary"></div>
+                        </div>
+
+                        <div class="mt-3 d-flex justify-content-center gap-2">
+                            <button id="btnFlip" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-repeat"></i> Turn
+                            </button>
+                            <button id="btnKnown" class="btn btn-success">
+                                <i class="bi bi-check2"></i> Đã biết
+                            </button>
+                            <button id="btnNext" class="btn btn-primary">
+                                Next <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
+
+                        <div class="small text-muted mt-3">
+                            <span id="progress">Card 1 of @Model.Cards.Count</span>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+          // ===== data =====
+          const cards = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Cards));
+          let idx = 0;
+
+          const elWord = document.getElementById('word');
+          const elPos  = document.getElementById('pos');
+          const elIpa  = document.getElementById('ipa');
+          const elMeaning = document.getElementById('meaning');
+          const elExEn = document.getElementById('ex-en');
+          const elExVi = document.getElementById('ex-vi');
+          const elFront = document.getElementById('face-front');
+          const elBack  = document.getElementById('face-back');
+          const elProg  = document.getElementById('progress');
+
+          function render(i) {
+            if (!cards.length) return;
+            const c = cards[i];
+            elWord.textContent = c.word ?? '';
+            elPos.textContent = c.pos ?? '';
+            elIpa.textContent = c.ipa ?? c.phonetic ?? '';
+            elMeaning.textContent = c.meaningVi ?? '';
+            elExEn.textContent = c.exampleEn ?? '';
+            elExVi.textContent = c.exampleVi ?? '';
+            elProg.textContent = `Card ${i+1} of ${cards.length}`;
+            // luôn quay về mặt trước
+            elFront.classList.remove('d-none');
+            elBack.classList.add('d-none');
+          }
+
+          // Flip
+          document.getElementById('btnFlip')?.addEventListener('click', () => {
+            elFront.classList.toggle('d-none');
+            elBack.classList.toggle('d-none');
+          });
+
+          // Next
+          document.getElementById('btnNext')?.addEventListener('click', () => {
+            idx = (idx + 1) % cards.length;
+            render(idx);
+          });
+
+          // Known (tạm thời chỉ gửi ping; bước sau sẽ ghi DB + cộng XP nếu hoàn thành)
+          document.getElementById('btnKnown')?.addEventListener('click', async () => {
+            try {
+              const id = cards[idx].id;
+              const form = new FormData();
+              form.append('cardId', id);
+              form.append('known', 'true');
+              await fetch('/Flashcards/MarkKnown', { method: 'POST', body: form });
+            } catch{}
+            // sang thẻ tiếp
+            idx = (idx + 1) % cards.length;
+            render(idx);
+          });
+
+          // TTS: dùng Web Speech API làm mặc định. (Bước sau sẽ thay bằng Azure Speech nếu cấu hình)
+          document.getElementById('btnSpeak')?.addEventListener('click', () => {
+            try {
+              const c = cards[idx];
+              const text = c.word || '';
+              const u = new SpeechSynthesisUtterance(text);
+              // chọn giọng theo mode nếu muốn:
+              // u.lang = '@Model.Mode' === 'hsk' ? 'zh-CN' : 'en-US';
+              speechSynthesis.speak(u);
+            } catch{}
+          });
+
+          // init
+          render(idx);
+        })();
+    </script>
+}

@@ -1,6 +1,15 @@
 ﻿@{
-    string ctrl = (ViewContext.RouteData.Values["controller"]?.ToString() ?? "").ToLower();
-    Func<string, string> active = (c) => ctrl == c.ToLower() ? "active" : "";
+    var ctrl = (ViewContext.RouteData.Values["controller"]?.ToString() ?? "").ToLower();
+    var mode = (Context.Request?.Query["mode"].ToString() ?? "").ToLower();
+
+    Func<string, string> active = c => ctrl == c.ToLower() ? "active" : "";
+
+    // Flashcards group status
+    bool isFlashcards = ctrl == "flashcards";
+    bool openFlashcards = isFlashcards;
+    string fcCollapseClass = openFlashcards ? "show" : "";
+    string fcAriaExpanded = openFlashcards ? "true" : "false";
+    string FcItemActive(string m) => (isFlashcards && mode == m) ? "active" : "";
 }
 
 <aside class="app-sidebar bg-white border-end">
@@ -23,7 +32,8 @@
             <i class="bi bi-chat-dots me-2"></i> Conversation
         </a>
 
-        <a class="nav-link @(ctrl=="dictation" ? "active" : "")" asp-controller="Dictation" asp-action="Index">
+        <a class="nav-link @(ctrl=="dictation" ? "active" : "")"
+           asp-controller="Dictation" asp-action="Index">
             <i class="bi bi-pencil-square me-2"></i> Dictation
         </a>
 
@@ -32,10 +42,33 @@
             <i class="bi bi-mic me-2"></i> Pronunciation
         </a>
 
-        <a class="nav-link @(ctrl=="flashcarddecks" ? "active" : "")"
-           asp-controller="FlashcardDecks" asp-action="Index">
-            <i class="bi bi-collection me-2"></i> Flashcards
+        <!-- Flashcards group -->
+        <a class="nav-link d-flex align-items-center @(isFlashcards ? "active" : "")"
+           data-bs-toggle="collapse"
+           href="#flashcardsMenu"
+           role="button"
+           aria-expanded="@fcAriaExpanded"
+           aria-controls="flashcardsMenu">
+            <i class="bi bi-collection me-2"></i>
+            <span class="flex-grow-1">Flashcards</span>
+            <i class="bi bi-caret-down ms-auto"></i>
         </a>
+        <div class="collapse @fcCollapseClass" id="flashcardsMenu">
+            <div class="nav flex-column ms-4 my-1">
+                <a class="nav-link small @FcItemActive("basic")"
+                   asp-controller="Flashcards" asp-action="Index" asp-route-mode="basic">
+                    Tiếng Anh thông dụng
+                </a>
+                <a class="nav-link small @FcItemActive("ielts")"
+                   asp-controller="Flashcards" asp-action="Index" asp-route-mode="ielts">
+                    Từ vựng IELTS
+                </a>
+                <a class="nav-link small @FcItemActive("hsk")"
+                   asp-controller="Flashcards" asp-action="Index" asp-route-mode="hsk">
+                    Từ vựng Tiếng Trung (HSK)
+                </a>
+            </div>
+        </div>
 
         <a class="nav-link @active("QuickTest")" href="#">
             <i class="bi bi-lightning me-2"></i> Quick Test
@@ -46,7 +79,6 @@
             <i class="bi bi-mortarboard me-2"></i> Courses
         </a>
 
-        
         <a class="nav-link @(ctrl=="settings" ? "active" : "")"
            asp-controller="Settings" asp-action="Index">
             <i class="bi bi-gear me-2"></i> Settings

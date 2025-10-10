@@ -4,6 +4,7 @@ using LearnLangs.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LearnLangs.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251010090835_AddFlashcards")]
+    partial class AddFlashcards
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -308,7 +311,7 @@ namespace LearnLangs.Data.Migrations
                     b.ToTable("UserDictationProgresses");
                 });
 
-            modelBuilder.Entity("LearnLangs.Models.Flashcards.FlashcardCard", b =>
+            modelBuilder.Entity("LearnLangs.Models.Flashcards.Flashcard", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -316,42 +319,52 @@ namespace LearnLangs.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("BackMeaningVi")
+                    b.Property<string>("AudioUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Back")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("DeckId")
                         .HasColumnType("int");
 
-                    b.Property<string>("ExampleEn")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ExampleVi")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FrontWord")
+                    b.Property<string>("Front")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Hint")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ImageUrl")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Ipa")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("OrderIndex")
                         .HasColumnType("int");
-
-                    b.Property<string>("Phonetic")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Pos")
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("DeckId", "OrderIndex");
 
-                    b.ToTable("FlashcardCards");
+                    b.ToTable("Flashcards");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 5001,
+                            Back = "quả táo",
+                            DeckId = 500,
+                            Front = "apple",
+                            OrderIndex = 1
+                        },
+                        new
+                        {
+                            Id = 5002,
+                            Back = "cuốn sách",
+                            DeckId = 500,
+                            Front = "book",
+                            OrderIndex = 2
+                        });
                 });
 
             modelBuilder.Entity("LearnLangs.Models.Flashcards.FlashcardDeck", b =>
@@ -365,12 +378,11 @@ namespace LearnLangs.Data.Migrations
                     b.Property<string>("CoverUrl")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Mode")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("OrderIndex")
-                        .HasColumnType("int");
+                    b.Property<bool>("IsPublic")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -378,9 +390,55 @@ namespace LearnLangs.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Mode", "OrderIndex");
-
                     b.ToTable("FlashcardDecks");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 500,
+                            CoverUrl = "/img/deck_basic.png",
+                            Description = "Common words",
+                            IsPublic = true,
+                            Title = "Basic English A1"
+                        });
+                });
+
+            modelBuilder.Entity("LearnLangs.Models.Flashcards.UserFlashcardProgress", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CardId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Due")
+                        .HasColumnType("datetime2");
+
+                    b.Property<double>("EaseFactor")
+                        .HasColumnType("float");
+
+                    b.Property<int>("IntervalDays")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Repetition")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "CardId")
+                        .IsUnique();
+
+                    b.ToTable("UserFlashcardProgresses");
                 });
 
             modelBuilder.Entity("LearnLangs.Models.Lesson", b =>
@@ -902,7 +960,7 @@ namespace LearnLangs.Data.Migrations
                     b.Navigation("Topic");
                 });
 
-            modelBuilder.Entity("LearnLangs.Models.Flashcards.FlashcardCard", b =>
+            modelBuilder.Entity("LearnLangs.Models.Flashcards.Flashcard", b =>
                 {
                     b.HasOne("LearnLangs.Models.Flashcards.FlashcardDeck", "Deck")
                         .WithMany("Cards")

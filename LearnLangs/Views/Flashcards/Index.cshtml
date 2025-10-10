@@ -1,0 +1,46 @@
+﻿@using LearnLangs.Models.Flashcards
+@model List<FlashDeckVM>
+@{
+    var mode = (ViewBag.Mode as string) ?? "basic";
+    ViewData["Title"] = mode switch
+    {
+        "ielts" => "Flashcard – Từ vựng IELTS",
+        "hsk" => "Flashcard – Tiếng Trung HSK",
+        _ => "Flashcard – Tiếng Anh thông dụng"
+    };
+}
+
+<div class="container-xxl">
+    <h3 class="mb-3">@ViewData["Title"]</h3>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            Chưa có bộ từ nào cho chế độ <strong>@mode</strong>. Bạn có thể nhập bằng Excel ở bước sau.
+        </div>
+    }
+    else
+    {
+        <div class="row g-3">
+            @foreach (var d in Model)
+            {
+                <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+                    <div class="card h-100 shadow-sm">
+                        @if (!string.IsNullOrWhiteSpace(d.CoverUrl))
+                        {
+                            <img class="card-img-top" src="@d.CoverUrl" alt="@d.Title" />
+                        }
+                        <div class="card-body d-flex flex-column">
+                            <h6 class="card-title">@d.Title</h6>
+                            <div class="text-muted small mb-2">@d.Count @("card" + (d.Count > 1 ? "s" : ""))</div>
+                            <a class="btn btn-primary mt-auto"
+                               asp-action="Play" asp-route-id="@d.Id" asp-route-part="1">
+                                Học ngay
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

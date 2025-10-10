@@ -1,7 +1,9 @@
 ﻿using LearnLangs.Models;
-using LearnLangs.Models.Dictation; // Dictation models
+using LearnLangs.Models.Dictation;
+using LearnLangs.Models.Flashcards;   
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+
 
 namespace LearnLangs.Data
 {
@@ -22,22 +24,25 @@ namespace LearnLangs.Data
         public DbSet<DictationItem> DictationItems => Set<DictationItem>();
         public DbSet<UserDictationProgress> UserDictationProgresses => Set<UserDictationProgress>();
 
+        // ===== Flashcards =====
+        public DbSet<FlashcardDeck> FlashcardDecks => Set<FlashcardDeck>();
+        public DbSet<FlashcardCard> FlashcardCards => Set<FlashcardCard>();
+        // Nếu bạn có Category thì thêm DbSet<FlashcardCategory> tại đây
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
-            // ---------------- Indexes & constraints ----------------
-            // Lesson: một course không được trùng OrderIndex
+            // ---------------- Indexes & constraints (Core) ----------------
             builder.Entity<Lesson>()
                 .HasIndex(l => new { l.CourseId, l.OrderIndex })
                 .IsUnique();
 
-            // UserLesson: 1 user – 1 lesson duy nhất
             builder.Entity<UserLesson>()
                 .HasIndex(ul => new { ul.UserId, ul.LessonId })
                 .IsUnique();
 
-            // Dictation quan hệ: Topic 1-n Set, Set 1-n Item
+            // Dictation: Topic 1-n Set, Set 1-n Item
             builder.Entity<DictationSet>()
                 .HasOne(s => s.Topic)
                 .WithMany(t => t.Sets)
@@ -50,17 +55,30 @@ namespace LearnLangs.Data
                 .HasForeignKey(i => i.SetId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Index sắp xếp nhanh
             builder.Entity<DictationSet>()
                 .HasIndex(s => new { s.TopicId, s.OrderIndex });
 
             builder.Entity<DictationItem>()
                 .HasIndex(i => new { i.SetId, i.OrderIndex });
 
-            // Mỗi user chỉ có 1 progress cho mỗi Set
             builder.Entity<UserDictationProgress>()
                 .HasIndex(p => new { p.UserId, p.SetId })
                 .IsUnique();
+
+            // ---------------- Flashcards: quan hệ & index ----------------
+            // Flashcards: quan hệ & index
+            builder.Entity<FlashcardCard>()
+                .HasOne(c => c.Deck)
+                .WithMany(d => d.Cards)
+                .HasForeignKey(c => c.DeckId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<FlashcardDeck>()
+                .HasIndex(d => new { d.Mode, d.OrderIndex });
+
+            builder.Entity<FlashcardCard>()
+                .HasIndex(c => new { c.DeckId, c.OrderIndex });
+
 
             // ---------------- Seed demo courses (giữ nguyên) ----------------
             builder.Entity<Course>().HasData(
