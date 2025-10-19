@@ -1,9 +1,8 @@
 ﻿using LearnLangs.Models;
 using LearnLangs.Models.Dictation;
-using LearnLangs.Models.Flashcards;   
+using LearnLangs.Models.Flashcards;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-
 
 namespace LearnLangs.Data
 {
@@ -27,7 +26,7 @@ namespace LearnLangs.Data
         // ===== Flashcards =====
         public DbSet<FlashcardDeck> FlashcardDecks => Set<FlashcardDeck>();
         public DbSet<FlashcardCard> FlashcardCards => Set<FlashcardCard>();
-        // Nếu bạn có Category thì thêm DbSet<FlashcardCategory> tại đây
+        // Nếu có Category: public DbSet<FlashcardCategory> FlashcardCategories => Set<FlashcardCategory>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -66,7 +65,6 @@ namespace LearnLangs.Data
                 .IsUnique();
 
             // ---------------- Flashcards: quan hệ & index ----------------
-            // Flashcards: quan hệ & index
             builder.Entity<FlashcardCard>()
                 .HasOne(c => c.Deck)
                 .WithMany(d => d.Cards)
@@ -78,7 +76,6 @@ namespace LearnLangs.Data
 
             builder.Entity<FlashcardCard>()
                 .HasIndex(c => new { c.DeckId, c.OrderIndex });
-
 
             // ---------------- Seed demo courses (giữ nguyên) ----------------
             builder.Entity<Course>().HasData(

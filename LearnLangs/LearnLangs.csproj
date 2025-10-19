@@ -33,7 +33,6 @@
 
 	<ItemGroup>
 	  <Folder Include="wwwroot\audio\flashcards\" />
-	  <Folder Include="wwwroot\img\flashcards\" />
 	</ItemGroup>
 
 

@@ -10,9 +10,11 @@
         public string? Pos { get; set; }
         public string? Ipa { get; set; }
         public string? Phonetic { get; set; }
+
         public string? BackMeaningVi { get; set; }
         public string? ExampleEn { get; set; }
         public string? ExampleVi { get; set; }
+
         public string? ImageUrl { get; set; }
 
         public FlashcardDeck? Deck { get; set; }

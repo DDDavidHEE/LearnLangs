@@ -1,5 +1,4 @@
-﻿// Controllers/FlashcardsController.cs
-using LearnLangs.Data;
+﻿using LearnLangs.Data;
 using LearnLangs.Models.Flashcards;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,6 +12,7 @@ namespace LearnLangs.Controllers
         private readonly ApplicationDbContext _db;
         public FlashcardsController(ApplicationDbContext db) { _db = db; }
 
+        // /Flashcards?mode=basic|ielts|hsk
         [HttpGet]
         public async Task<IActionResult> Index(string mode = "basic")
         {
@@ -26,7 +26,7 @@ namespace LearnLangs.Controllers
                     Id = d.Id,
                     Title = d.Title,
                     CoverUrl = d.CoverUrl,
-                    Count = d.Cards.Count(),   // CHÚ Ý: Count()
+                    Count = d.Cards.Count(),   // EF Core translate thành subquery
                     Mode = d.Mode
                 })
                 .ToListAsync();
@@ -35,19 +35,19 @@ namespace LearnLangs.Controllers
             return View(decks);
         }
 
+        // /Flashcards/Play/5?part=1
         [HttpGet]
         public async Task<IActionResult> Play(int id, int part = 1)
         {
             const int pageSize = 20;
 
             var deck = await _db.FlashcardDecks
-                .Include(d => d.Cards) // KHÔNG OrderBy ở đây
+                .Include(d => d.Cards)
                 .FirstOrDefaultAsync(d => d.Id == id);
 
             if (deck == null) return NotFound();
 
             var cards = deck.Cards.OrderBy(c => c.OrderIndex).ToList();
-
             var totalCount = cards.Count;
             var totalParts = (int)Math.Ceiling(totalCount / (double)pageSize);
             part = Math.Max(1, Math.Min(totalParts == 0 ? 1 : totalParts, part));
@@ -84,45 +84,11 @@ namespace LearnLangs.Controllers
             return View(vm);
         }
 
+        // tạm thời
         [HttpPost]
         public IActionResult MarkKnown([FromForm] int cardId, [FromForm] bool known)
         {
             return Json(new { ok = true });
         }
-    }
-
-    // ViewModels
-    public record FlashDeckVM
-    {
-        public int Id { get; set; }
-        public string Title { get; set; } = "";
-        public string? CoverUrl { get; set; }
-        public string Mode { get; set; } = "basic";
-        public int Count { get; set; }
-    }
-
-    public record FlashCardVM
-    {
-        public int Id { get; set; }
-        public string Word { get; set; } = "";
-        public string? Pos { get; set; }
-        public string? Ipa { get; set; }
-        public string? Phonetic { get; set; }
-        public string? MeaningVi { get; set; }
-        public string? ExampleEn { get; set; }
-        public string? ExampleVi { get; set; }
-        public string? ImageUrl { get; set; }
-    }
-
-    public record PlayDeckVM
-    {
-        public int DeckId { get; set; }
-        public string DeckTitle { get; set; } = "";
-        public string Mode { get; set; } = "basic";
-        public string? CoverUrl { get; set; }
-        public int Part { get; set; }
-        public int TotalParts { get; set; }
-        public int TotalCards { get; set; }
-        public List<FlashCardVM> Cards { get; set; } = new();
     }
 }

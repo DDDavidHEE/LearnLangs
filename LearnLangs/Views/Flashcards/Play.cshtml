@@ -39,27 +39,34 @@
             else
             {
                 <div id="fc-player" class="card shadow-sm">
+                    @* FIX: Bỏ code bị lặp 2 lần *@
                     @if (!string.IsNullOrWhiteSpace(Model.CoverUrl))
                     {
-                        <img class="card-img-top" src="@Model.CoverUrl" alt="@Model.DeckTitle" />
+                        <div class="player-cover d-none d-md-block">
+                            <img src="@Model.CoverUrl" alt="@Model.DeckTitle" />
+                        </div>
                     }
+
                     <div class="card-body text-center">
+                        @* Mặt trước *@
                         <div id="face-front">
                             <button id="btnSpeak" class="btn btn-outline-primary btn-sm mb-2" title="Phát âm">
                                 <i class="bi bi-volume-up"></i>
                             </button>
 
-                            <h4 class="mb-1" id="word"></h4>
+                            <h4 class="mb-1" id="word">Loading...</h4>
                             <div class="text-muted" id="pos"></div>
                             <div class="text-secondary" id="ipa"></div>
                         </div>
 
+                        @* Mặt sau *@
                         <div id="face-back" class="d-none">
                             <h5 id="meaning" class="mb-2"></h5>
                             <div id="ex-en" class="mb-1"></div>
                             <div id="ex-vi" class="text-secondary"></div>
                         </div>
 
+                        @* Buttons *@
                         <div class="mt-3 d-flex justify-content-center gap-2">
                             <button id="btnFlip" class="btn btn-outline-secondary">
                                 <i class="bi bi-arrow-repeat"></i> Turn
@@ -72,6 +79,7 @@
                             </button>
                         </div>
 
+                        @* Progress *@
                         <div class="small text-muted mt-3">
                             <span id="progress">Card 1 of @Model.Cards.Count</span>
                         </div>
@@ -84,76 +92,150 @@
 
 @section Scripts {
     <script>
-        (() => {
-          // ===== data =====
-          const cards = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Cards));
-          let idx = 0;
+        (function() {
+            'use strict';
 
-          const elWord = document.getElementById('word');
-          const elPos  = document.getElementById('pos');
-          const elIpa  = document.getElementById('ipa');
-          const elMeaning = document.getElementById('meaning');
-          const elExEn = document.getElementById('ex-en');
-          const elExVi = document.getElementById('ex-vi');
-          const elFront = document.getElementById('face-front');
-          const elBack  = document.getElementById('face-back');
-          const elProg  = document.getElementById('progress');
+            console.log('=== Flashcard Player Init ===');
 
-          function render(i) {
-            if (!cards.length) return;
-            const c = cards[i];
-            elWord.textContent = c.word ?? '';
-            elPos.textContent = c.pos ?? '';
-            elIpa.textContent = c.ipa ?? c.phonetic ?? '';
-            elMeaning.textContent = c.meaningVi ?? '';
-            elExEn.textContent = c.exampleEn ?? '';
-            elExVi.textContent = c.exampleVi ?? '';
-            elProg.textContent = `Card ${i+1} of ${cards.length}`;
-            // luôn quay về mặt trước
-            elFront.classList.remove('d-none');
-            elBack.classList.add('d-none');
-          }
-
-          // Flip
-          document.getElementById('btnFlip')?.addEventListener('click', () => {
-            elFront.classList.toggle('d-none');
-            elBack.classList.toggle('d-none');
-          });
-
-          // Next
-          document.getElementById('btnNext')?.addEventListener('click', () => {
-            idx = (idx + 1) % cards.length;
-            render(idx);
-          });
-
-          // Known (tạm thời chỉ gửi ping; bước sau sẽ ghi DB + cộng XP nếu hoàn thành)
-          document.getElementById('btnKnown')?.addEventListener('click', async () => {
+            // ===== Data từ server =====
+            let cardsData;
             try {
-              const id = cards[idx].id;
-              const form = new FormData();
-              form.append('cardId', id);
-              form.append('known', 'true');
-              await fetch('/Flashcards/MarkKnown', { method: 'POST', body: form });
-            } catch{}
-            // sang thẻ tiếp
-            idx = (idx + 1) % cards.length;
+                cardsData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Cards));
+                console.log('Cards loaded:', cardsData);
+                console.log('Total cards:', cardsData?.length || 0);
+            } catch (err) {
+                console.error('ERROR parsing cards data:', err);
+                alert('Lỗi tải dữ liệu thẻ. Vui lòng refresh lại trang.');
+                return;
+            }
+
+            if (!cardsData || !Array.isArray(cardsData) || cardsData.length === 0) {
+                console.error('No cards data available');
+                return;
+            }
+
+            const cards = cardsData;
+            let idx = 0;
+
+            // ===== DOM Elements =====
+            const elWord = document.getElementById('word');
+            const elPos = document.getElementById('pos');
+            const elIpa = document.getElementById('ipa');
+            const elMeaning = document.getElementById('meaning');
+            const elExEn = document.getElementById('ex-en');
+            const elExVi = document.getElementById('ex-vi');
+            const elFront = document.getElementById('face-front');
+            const elBack = document.getElementById('face-back');
+            const elProg = document.getElementById('progress');
+
+            // Kiểm tra elements tồn tại
+            if (!elWord || !elFront || !elBack) {
+                console.error('ERROR: Required DOM elements not found');
+                return;
+            }
+
+            // ===== Render Function =====
+            function render(i) {
+                if (!cards || !cards.length) {
+                    console.error('No cards to render');
+                    return;
+                }
+
+                const c = cards[i];
+                console.log('Rendering card', i + 1, ':', c);
+
+                // Hỗ trợ cả lowercase và PascalCase properties
+                elWord.textContent = c.word || c.Word || '[No word]';
+                elPos.textContent = c.pos || c.Pos || '';
+                elIpa.textContent = c.ipa || c.Ipa || c.phonetic || c.Phonetic || '';
+                elMeaning.textContent = c.meaningVi || c.MeaningVi || '[No meaning]';
+                elExEn.textContent = c.exampleEn || c.ExampleEn || '';
+                elExVi.textContent = c.exampleVi || c.ExampleVi || '';
+                elProg.textContent = 'Card ' + (i + 1) + ' of ' + cards.length;
+
+                // Reset về mặt trước
+                elFront.classList.remove('d-none');
+                elBack.classList.add('d-none');
+            }
+
+            // ===== Event: Flip Card =====
+            const btnFlip = document.getElementById('btnFlip');
+            if (btnFlip) {
+                btnFlip.addEventListener('click', function() {
+                    elFront.classList.toggle('d-none');
+                    elBack.classList.toggle('d-none');
+                });
+            }
+
+            // ===== Event: Next Card =====
+            const btnNext = document.getElementById('btnNext');
+            if (btnNext) {
+                btnNext.addEventListener('click', function() {
+                    idx = (idx + 1) % cards.length;
+                    render(idx);
+                });
+            }
+
+            // ===== Event: Mark as Known =====
+            const btnKnown = document.getElementById('btnKnown');
+            if (btnKnown) {
+                btnKnown.addEventListener('click', async function() {
+                    try {
+                        const cardId = cards[idx].id || cards[idx].Id;
+                        if (!cardId) {
+                            console.warn('Card ID not found');
+                        } else {
+                            const form = new FormData();
+                            form.append('cardId', cardId);
+                            form.append('known', 'true');
+                            await fetch('/Flashcards/MarkKnown', {
+                                method: 'POST',
+                                body: form
+                            });
+                            console.log('Card marked as known:', cardId);
+                        }
+                    } catch (err) {
+                        console.error('Error marking known:', err);
+                    }
+
+                    // Chuyển sang thẻ tiếp theo
+                    idx = (idx + 1) % cards.length;
+                    render(idx);
+                });
+            }
+
+            // ===== Event: Text-to-Speech =====
+            const btnSpeak = document.getElementById('btnSpeak');
+            if (btnSpeak) {
+                btnSpeak.addEventListener('click', function() {
+                    try {
+                        const c = cards[idx];
+                        const text = c.word || c.Word || '';
+
+                        if (!text) {
+                            console.warn('No text to speak');
+                            return;
+                        }
+
+                        // Hủy speech đang chạy (nếu có)
+                        speechSynthesis.cancel();
+
+                        const utterance = new SpeechSynthesisUtterance(text);
+                        utterance.lang = '@Model.Mode' === 'hsk' ? 'zh-CN' : 'en-US';
+                        utterance.rate = 0.9; // Nói chậm hơn một chút
+
+                        speechSynthesis.speak(utterance);
+                        console.log('Speaking:', text);
+                    } catch (err) {
+                        console.error('Speech error:', err);
+                    }
+                });
+            }
+
+            // ===== Initialize =====
+            console.log('Starting first render...');
             render(idx);
-          });
-
-          // TTS: dùng Web Speech API làm mặc định. (Bước sau sẽ thay bằng Azure Speech nếu cấu hình)
-          document.getElementById('btnSpeak')?.addEventListener('click', () => {
-            try {
-              const c = cards[idx];
-              const text = c.word || '';
-              const u = new SpeechSynthesisUtterance(text);
-              // chọn giọng theo mode nếu muốn:
-              // u.lang = '@Model.Mode' === 'hsk' ? 'zh-CN' : 'en-US';
-              speechSynthesis.speak(u);
-            } catch{}
-          });
-
-          // init
-          render(idx);
+            console.log('=== Flashcard Player Ready ===');
         })();
     </script>
 }

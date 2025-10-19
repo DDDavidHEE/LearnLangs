@@ -136,7 +136,7 @@ namespace LearnLangs.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Courses");
+                    b.ToTable("Courses", (string)null);
 
                     b.HasData(
                         new
@@ -182,7 +182,7 @@ namespace LearnLangs.Data.Migrations
 
                     b.HasIndex("SetId", "OrderIndex");
 
-                    b.ToTable("DictationItems");
+                    b.ToTable("DictationItems", (string)null);
 
                     b.HasData(
                         new
@@ -228,7 +228,7 @@ namespace LearnLangs.Data.Migrations
 
                     b.HasIndex("TopicId", "OrderIndex");
 
-                    b.ToTable("DictationSets");
+                    b.ToTable("DictationSets", (string)null);
 
                     b.HasData(
                         new
@@ -261,7 +261,7 @@ namespace LearnLangs.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("DictationTopics");
+                    b.ToTable("DictationTopics", (string)null);
 
                     b.HasData(
                         new
@@ -305,7 +305,7 @@ namespace LearnLangs.Data.Migrations
                     b.HasIndex("UserId", "SetId")
                         .IsUnique();
 
-                    b.ToTable("UserDictationProgresses");
+                    b.ToTable("UserDictationProgresses", (string)null);
                 });
 
             modelBuilder.Entity("LearnLangs.Models.Flashcards.FlashcardCard", b =>
@@ -351,7 +351,7 @@ namespace LearnLangs.Data.Migrations
 
                     b.HasIndex("DeckId", "OrderIndex");
 
-                    b.ToTable("FlashcardCards");
+                    b.ToTable("FlashcardCards", (string)null);
                 });
 
             modelBuilder.Entity("LearnLangs.Models.Flashcards.FlashcardDeck", b =>
@@ -380,7 +380,7 @@ namespace LearnLangs.Data.Migrations
 
                     b.HasIndex("Mode", "OrderIndex");
 
-                    b.ToTable("FlashcardDecks");
+                    b.ToTable("FlashcardDecks", (string)null);
                 });
 
             modelBuilder.Entity("LearnLangs.Models.Lesson", b =>
@@ -410,7 +410,7 @@ namespace LearnLangs.Data.Migrations
                     b.HasIndex("CourseId", "OrderIndex")
                         .IsUnique();
 
-                    b.ToTable("Lessons");
+                    b.ToTable("Lessons", (string)null);
 
                     b.HasData(
                         new
@@ -500,7 +500,7 @@ namespace LearnLangs.Data.Migrations
 
                     b.HasIndex("LessonId");
 
-                    b.ToTable("Questions");
+                    b.ToTable("Questions", (string)null);
 
                     b.HasData(
                         new
@@ -740,7 +740,7 @@ namespace LearnLangs.Data.Migrations
                     b.HasIndex("UserId", "LessonId")
                         .IsUnique();
 
-                    b.ToTable("UserLessons");
+                    b.ToTable("UserLessons", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

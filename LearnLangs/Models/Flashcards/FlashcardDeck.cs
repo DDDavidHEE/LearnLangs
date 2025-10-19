@@ -4,7 +4,7 @@
     {
         public int Id { get; set; }
         public string Title { get; set; } = "";
-        public string Mode { get; set; } = "basic"; // basic|ielts|hsk
+        public string Mode { get; set; } = "basic";   // basic | ielts | hsk
         public string? CoverUrl { get; set; }
         public int OrderIndex { get; set; } = 1;
 
