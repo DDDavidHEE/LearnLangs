@@ -1,0 +1,135 @@
+﻿@{
+    ViewData["Title"] = "Conversation";
+    var sessionId = Guid.NewGuid().ToString("N");
+}
+
+@section Head {
+    <style>
+        .chat-wrap {
+            max-width: 980px;
+            margin: 16px auto;
+            padding: 0 12px
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid #e0e3e7;
+            border-radius: 12px;
+            box-shadow: 0 1px 2px rgba(60,64,67,.3),0 2px 6px rgba(60,64,67,.15)
+        }
+
+        .log {
+            height: 460px;
+            overflow: auto;
+            padding: 12px
+        }
+
+        .msg {
+            margin: 8px 0;
+            white-space: pre-wrap
+        }
+
+            .msg.me {
+                color: #0b57d0
+            }
+
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 8px
+        }
+
+        .input-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px
+        }
+    </style>
+}
+
+<div class="chat-wrap">
+    <div class="toolbar">
+        <span class="badge text-bg-light">Session: <code id="sid">@sessionId</code></span>
+        <div class="form-check">
+            <input id="ttsChk" class="form-check-input" type="checkbox" checked />
+            <label class="form-check-label" for="ttsChk">Speak replies</label>
+        </div>
+        <button id="clearBtn" class="btn btn-sm btn-outline-secondary rounded-pill">Clear</button>
+    </div>
+
+    <div class="card">
+        <div id="log" class="log"></div>
+    </div>
+
+    <div class="input-row">
+        <textarea id="input" class="form-control" rows="2" placeholder="Type a message..."></textarea>
+        <button id="sendBtn" class="btn btn-primary rounded-pill px-4">Send</button>
+    </div>
+
+    <div class="text-muted small mt-2">Tin nhắn được giữ ngữ cảnh trong session hiện tại.</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.5/signalr.min.js"></script>
+<script>
+    const sessionId = document.getElementById('sid').textContent.trim();
+    const log = document.getElementById('log');
+    const input = document.getElementById('input');
+    const sendBtn = document.getElementById('sendBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const ttsChk = document.getElementById('ttsChk');
+
+    function add(role, text){
+      const div = document.createElement('div');
+      div.className = 'msg' + (role==='You' ? ' me' : '');
+      div.textContent = `${role}: ${text}`;
+      log.appendChild(div); log.scrollTop = log.scrollHeight;
+      if (role === 'AI' && ttsChk?.checked) speak(text);
+    }
+
+    function speak(t){
+      try { new SpeechSynthesisUtterance && speechSynthesis.speak(new SpeechSynthesisUtterance(t)); } catch {}
+    }
+
+    // ----- SignalR -----
+    const conn = new signalR.HubConnectionBuilder().withUrl("/hubs/chat").build();
+
+    conn.on("assistant", (m) => {
+      console.log("[SR] assistant", m);
+      if (!m || m.sessionId !== sessionId) return;
+      add('AI', m.text || '(no content)');
+    });
+
+    conn.start()
+      .then(()=> conn.invoke("Join", sessionId))
+      .then(()=> console.log("[SR] joined", sessionId))
+      .catch(err=> console.error("[SR] error", err));
+
+    async function send(){
+      const text = (input.value || "").trim();
+      if(!text) return;
+      add('You', text);
+      input.value = '';
+
+      try{
+        const res = await fetch('/api/chat/send', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ sessionId, text })
+        });
+        if(!res.ok){
+          const body = await res.text();
+          add('AI', `⚠️ API error ${res.status}: ${body}`);
+        }
+      }catch(e){
+        console.error(e);
+        add('AI', '⚠️ Network error');
+      }
+    }
+
+    sendBtn.onclick = send;
+    input.addEventListener('keydown', e => {
+      if(e.key==='Enter' && !e.ctrlKey){ e.preventDefault(); send(); }
+    });
+    clearBtn.onclick = ()=> log.innerHTML='';
+</script>

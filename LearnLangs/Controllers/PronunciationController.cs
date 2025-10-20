@@ -1,58 +1,51 @@
-﻿// LearnLangs/Controllers/PronunciationController.cs
-using System.Threading;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Mvc;
 using LearnLangs.Models;
 using LearnLangs.Services.Pronunciation;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 
 namespace LearnLangs.Controllers
 {
-    [Authorize]
     public class PronunciationController : Controller
     {
-        private readonly IPronunciationAssessmentService _svc;
+        private readonly IGeminiPronunciationService _gemini;
 
-        public PronunciationController(IPronunciationAssessmentService svc)
+        public PronunciationController(IGeminiPronunciationService gemini)
         {
-            _svc = svc;
+            _gemini = gemini;
         }
 
-        // GET: /Pronunciation
         [HttpGet]
-        public IActionResult Index(string? text = null)
+        public IActionResult Index()
         {
-            var model = new PronunciationInputModel
-            {
-                ReferenceText = text ?? string.Empty
-            };
-            return View(model);
+            return View(new PronunciationInputModel { ReferenceText = "Hello world" });
         }
 
-        // POST: /Pronunciation/Assess
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Assess(PronunciationInputModel input, CancellationToken ct)
+        public async Task<IActionResult> Analyze(PronunciationInputModel model)
         {
-            // Kiểm tra dữ liệu form
-            if (string.IsNullOrWhiteSpace(input?.ReferenceText))
-                ModelState.AddModelError(nameof(input.ReferenceText), "Vui lòng nhập câu cần đọc.");
+            if (model.AudioFile == null || model.AudioFile.Length == 0)
+            {
+                ModelState.AddModelError("", "No audio uploaded.");
+                return View("Index", model);
+            }
 
-            if (input?.AudioFile is null || input.AudioFile.Length == 0)
-                ModelState.AddModelError(nameof(input.AudioFile), "Vui lòng chọn tệp âm thanh.");
+            using var ms = new MemoryStream();
+            await model.AudioFile.CopyToAsync(ms);
+            var audioBytes = ms.ToArray();
 
-            // (Không bắt buộc) giới hạn kích thước upload ~20MB
-            if (input?.AudioFile is not null && input.AudioFile.Length > 20 * 1024 * 1024)
-                ModelState.AddModelError(nameof(input.AudioFile), "Tệp quá lớn (giới hạn 20MB).");
+            // Dùng ContentType thật của file (webm/ogg/wav)
+            var mime = string.IsNullOrWhiteSpace(model.AudioFile.ContentType) ? "audio/webm" : model.AudioFile.ContentType;
 
-            if (!ModelState.IsValid)
-                return View("Index", input);
+            var result = await _gemini.AssessWithGeminiAsync(
+                audioBytes,
+                model.ReferenceText ?? "Hello world",
+                mime
+            );
 
-            // Gọi service chấm điểm
-            var result = await _svc.AssessAsync(input.ReferenceText, input.AudioFile, ct);
+            // (Tuỳ chọn) Bạn có thể đính kèm model.SpokenText vào ViewData để hiển thị cùng kết quả
+            ViewData["SpokenText"] = model.SpokenText;
 
-            // Trả về view hiển thị điểm
-            return View("Result", result);
+            return View("AnalysisResult", result);
         }
     }
 }

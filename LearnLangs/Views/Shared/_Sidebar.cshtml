@@ -19,8 +19,8 @@
     </div>
 
     <nav class="nav flex-column py-2">
-        <a class="nav-link @(ctrl=="translate" ? "active" : "")"
-           asp-controller="Translate" asp-action="Index">
+        <a class="nav-link @active("Translate")"
+           asp-controller="Translate" asp-action="Index" data-hard-nav="true">
             <i class="bi bi-translate me-2"></i> Translate
         </a>
 
@@ -28,17 +28,19 @@
             <i class="bi bi-book me-2"></i> Vocabulary
         </a>
 
-        <a class="nav-link @active("Conversation")" href="#">
+        <!-- Conversation: dùng MVC link thay vì # -->
+        <a class="nav-link @active("Chat")"
+           asp-controller="Chat" asp-action="Index" data-hard-nav="true">
             <i class="bi bi-chat-dots me-2"></i> Conversation
         </a>
 
-        <a class="nav-link @(ctrl=="dictation" ? "active" : "")"
-           asp-controller="Dictation" asp-action="Index">
+        <a class="nav-link @active("Dictation")"
+           asp-controller="Dictation" asp-action="Index" data-hard-nav="true">
             <i class="bi bi-pencil-square me-2"></i> Dictation
         </a>
 
-        <a class="nav-link @(ctrl=="pronunciation" ? "active" : "")"
-           asp-controller="Pronunciation" asp-action="Index">
+        <a class="nav-link @active("Pronunciation")"
+           asp-controller="Pronunciation" asp-action="Index" data-hard-nav="true">
             <i class="bi bi-mic me-2"></i> Pronunciation
         </a>
 
@@ -56,15 +58,15 @@
         <div class="collapse @fcCollapseClass" id="flashcardsMenu">
             <div class="nav flex-column ms-4 my-1">
                 <a class="nav-link small @FcItemActive("basic")"
-                   asp-controller="Flashcards" asp-action="Index" asp-route-mode="basic">
-                    Common English 
+                   asp-controller="Flashcards" asp-action="Index" asp-route-mode="basic" data-hard-nav="true">
+                    Common English
                 </a>
                 <a class="nav-link small @FcItemActive("ielts")"
-                   asp-controller="Flashcards" asp-action="Index" asp-route-mode="ielts">
+                   asp-controller="Flashcards" asp-action="Index" asp-route-mode="ielts" data-hard-nav="true">
                     IELTS Vocabulary
                 </a>
                 <a class="nav-link small @FcItemActive("hsk")"
-                   asp-controller="Flashcards" asp-action="Index" asp-route-mode="hsk">
+                   asp-controller="Flashcards" asp-action="Index" asp-route-mode="hsk" data-hard-nav="true">
                     HSK Chinese
                 </a>
             </div>
@@ -74,13 +76,13 @@
             <i class="bi bi-lightning me-2"></i> Quick Test
         </a>
 
-        <a class="nav-link @(ctrl=="courses" ? "active" : "")"
-           asp-controller="Courses" asp-action="Index">
+        <a class="nav-link @active("Courses")"
+           asp-controller="Courses" asp-action="Index" data-hard-nav="true">
             <i class="bi bi-mortarboard me-2"></i> Courses
         </a>
 
-        <a class="nav-link @(ctrl=="settings" ? "active" : "")"
-           asp-controller="Settings" asp-action="Index">
+        <a class="nav-link @active("Settings")"
+           asp-controller="Settings" asp-action="Index" data-hard-nav="true">
             <i class="bi bi-gear me-2"></i> Settings
         </a>
     </nav>

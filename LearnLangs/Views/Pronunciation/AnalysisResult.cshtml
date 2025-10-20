@@ -1,0 +1,62 @@
+﻿@model LearnLangs.Services.Pronunciation.PronunciationResultDto
+@{
+    ViewData["Title"] = "Pronunciation Analysis";
+}
+
+<h2>Phân tích phát âm</h2>
+
+@* Hiển thị câu người dùng vừa nói (được gửi từ Index qua ViewData["SpokenText"]) *@
+@if (ViewData["SpokenText"] is string st && !string.IsNullOrWhiteSpace(st))
+{
+    <div class="alert alert-secondary" role="alert" style="max-width: 720px;">
+        <strong>You said:</strong> @st
+    </div>
+}
+
+@if (Model is null)
+{
+    <p>Không có dữ liệu kết quả.</p>
+}
+else
+{
+    <div class="mb-3">
+        <p><strong>Pronunciation Score:</strong> @Model.PronunciationScore</p>
+        <p><strong>Accuracy:</strong> @Model.AccuracyScore</p>
+        <p><strong>Fluency:</strong> @Model.FluencyScore</p>
+        <p><strong>Completeness:</strong> @Model.CompletenessScore</p>
+        <p><strong>Prosody:</strong> @Model.ProsodyScore</p>
+    </div>
+
+    @if (Model.Words != null && Model.Words.Any())
+    {
+        <h4>Chi tiết từng từ</h4>
+        <table class="table table-bordered table-sm">
+            <thead>
+                <tr>
+                    <th>Từ</th>
+                    <th>Lỗi</th>
+                    <th>Độ chính xác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var w in Model.Words)
+                {
+                    <tr>
+                        <td>@w.Word</td>
+                        <td>@w.ErrorType</td>
+                        <td>@w.AccuracyScore</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    @* (Tuỳ chọn) Hiện JSON thô để debug *@
+    @if (!string.IsNullOrWhiteSpace(Model.RawJson))
+    {
+        <details class="mt-3">
+            <summary>Hiện JSON chi tiết từ Gemini API</summary>
+            <pre style="white-space:pre-wrap; word-break:break-word;">@Model.RawJson</pre>
+        </details>
+    }
+}

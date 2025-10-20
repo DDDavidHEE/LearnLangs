@@ -1,13 +1,15 @@
 ﻿using LearnLangs.Data;
 using LearnLangs.Models;
 
-using LearnLangs.Options;                      // AzureSpeechOptions, AzureTranslatorOptions
-using LearnLangs.Services.Pronunciation;       // IPronunciationAssessmentService
-using LearnLangs.Services.Translate;           // ITranslateService, AzureTranslatorService
+using LearnLangs.Hubs;                        // ChatHub
+using LearnLangs.Options;                    // AzureTranslatorOptions, GeminiAiOptions
+using LearnLangs.Services.Chat;              // IGeminiChatService, GeminiChatService
+using LearnLangs.Services.Pronunciation;     // IGeminiPronunciationService, GeminiPronunciationService
+using LearnLangs.Services.Translate;         // ITranslateService, AzureTranslatorService
 
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;            // IOptions<T>
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,15 +35,23 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 // ================== MVC ==================
 builder.Services.AddControllersWithViews();
 
-// ================== Azure Speech (Pronunciation) ==================
-builder.Services.Configure<AzureSpeechOptions>(
-    builder.Configuration.GetSection("AzureSpeech"));
-builder.Services.AddScoped<IPronunciationAssessmentService, PronunciationAssessmentService>();
+// ================== SignalR (Realtime chat) ==================
+builder.Services.AddSignalR();
 
-// ================== Azure Translator (Text Translate) ==================
+// ================== Azure Translator ==================
 builder.Services.Configure<AzureTranslatorOptions>(
     builder.Configuration.GetSection("AzureTranslator"));
 builder.Services.AddHttpClient<ITranslateService, AzureTranslatorService>();
+
+// ================== Gemini (Options dùng chung) ==================
+builder.Services.Configure<GeminiAiOptions>(
+    builder.Configuration.GetSection("GeminiAI"));
+
+// ---- Gemini: Pronunciation (nếu bạn còn dùng) ----
+builder.Services.AddHttpClient<IGeminiPronunciationService, GeminiPronunciationService>();
+
+// ---- Gemini: Chat (hội thoại AI) ----
+builder.Services.AddHttpClient<IGeminiChatService, GeminiChatService>();
 
 var app = builder.Build();
 
@@ -50,13 +60,13 @@ await SeedData.EnsureSeededAsync(app.Services);
 await IdentitySeed.EnsureAdminAsync(app.Services);
 
 // ===== Log quick check (không lộ key) =====
-var speechOpts = app.Services.GetRequiredService<IOptions<AzureSpeechOptions>>().Value;
-app.Logger.LogInformation("[AzureSpeech] Region={Region}, Lang={Lang}, KeySet={KeySet}",
-    speechOpts.Region, speechOpts.RecognitionLanguage, !string.IsNullOrEmpty(speechOpts.SubscriptionKey));
-
 var transOpts = app.Services.GetRequiredService<IOptions<AzureTranslatorOptions>>().Value;
 app.Logger.LogInformation("[AzureTranslator] Region={Region}, Endpoint={Endpoint}, KeySet={KeySet}",
     transOpts.Region, transOpts.Endpoint, !string.IsNullOrEmpty(transOpts.SubscriptionKey));
+
+var geminiOpts = app.Services.GetRequiredService<IOptions<GeminiAiOptions>>().Value;
+app.Logger.LogInformation("[GeminiAI] Model={Model}, Endpoint={Endpoint}, KeySet={KeySet}",
+    geminiOpts.Model, geminiOpts.Endpoint, !string.IsNullOrEmpty(geminiOpts.ApiKey));
 
 // ================== Pipeline ==================
 if (app.Environment.IsDevelopment())
@@ -77,9 +87,23 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// ===== Hubs (SignalR) =====
+app.MapHub<ChatHub>("/hubs/chat");
+
+// ===== Routes =====
+// Route RIÊNG cho Conversation: /Conversation (controller = Chat)
+app.MapControllerRoute(
+    name: "conversation",
+    pattern: "Conversation/{action=Index}/{id?}",
+    defaults: new { controller = "Chat" }
+);
+
+// Route mặc định của toàn site (KHÔNG phải Chat)
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}"
+);
+
 app.MapRazorPages();
 
 app.Run();

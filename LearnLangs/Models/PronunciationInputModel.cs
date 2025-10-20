@@ -1,15 +1,16 @@
-﻿// LearnLangs/Models/PronunciationInputModel.cs
+﻿using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Http;
 
-namespace LearnLangs.Models;
-
-public class PronunciationInputModel
+namespace LearnLangs.Models
 {
-    [Required, Display(Name = "Reference text)")]
-    public string ReferenceText { get; set; } = "";
+    public class PronunciationInputModel
+    {
+        public IFormFile? AudioFile { get; set; }
 
-    // Nhận file .wav người dùng upload (PCM mono 16kHz khuyến nghị)
-    [Required, Display(Name = "Audio file (.wav mono 16kHz)")]
-    public IFormFile AudioFile { get; set; } = default!;
+        [Required]
+        public string ReferenceText { get; set; } = "Hello world";
+
+        // Phụ đề trực tiếp (nhận từ Web Speech API ở client)
+        public string? SpokenText { get; set; }
+    }
 }
