@@ -1,7 +1,6 @@
 ﻿@{
     var ctrl = (ViewContext.RouteData.Values["controller"]?.ToString() ?? "").ToLower();
     var mode = (Context.Request?.Query["mode"].ToString() ?? "").ToLower();
-
     Func<string, string> active = c => ctrl == c.ToLower() ? "active" : "";
 
     // Flashcards group status
@@ -28,9 +27,9 @@
             <i class="bi bi-book me-2"></i> Vocabulary
         </a>
 
-        <!-- Conversation: dùng MVC link thay vì # -->
-        <a class="nav-link @active("Chat")"
-           asp-controller="Chat" asp-action="Index" data-hard-nav="true">
+        <!-- FIXED: Link to Conversation controller -->
+        <a class="nav-link @active("Conversation")"
+           asp-controller="Conversation" asp-action="Index" data-hard-nav="true">
             <i class="bi bi-chat-dots me-2"></i> Conversation
         </a>
 

@@ -1,0 +1,64 @@
+﻿<script>
+    const sessionId = document.getElementById('sid').textContent.trim();
+    const log = document.getElementById('log');
+    const input = document.getElementById('input');
+    const sendBtn = document.getElementById('sendBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const ttsChk = document.getElementById('ttsChk');
+
+    function add(role, text){
+      const div = document.createElement('div');
+      div.className = 'msg' + (role==='You' ? ' me' : '');
+      div.textContent = `${role}: ${text ?? ''}`;
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+      if (role === 'AI' && ttsChk?.checked) {
+        try { speechSynthesis.speak(new SpeechSynthesisUtterance(text ?? '')); } catch {}
+      }
+    }
+
+    async function send(){
+      const text = (input.value || '').trim();
+      if(!text) return;
+      add('You', text);
+      input.value = '';
+      sendBtn.disabled = true;
+
+      // default tutor settings; you can later expose controls for these
+      const targetLanguage = "English";
+      const level = "beginner";
+      const goal  = "conversation";
+
+      try{
+        const res = await fetch('/api/conversation/send', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ sessionId, text, targetLanguage, level, goal })
+        });
+
+        const body = await res.text();
+        if(!res.ok){
+          add('AI', `⚠️ ${res.status} ${res.statusText}\n${body}`);
+          return;
+        }
+        const data = JSON.parse(body);
+        add('AI', data.reply || '(no content)');
+      }catch(e){
+        console.error(e);
+        add('AI', '⚠️ Network error');
+      }finally{
+        sendBtn.disabled = false;
+        input.focus();
+      }
+    }
+
+    sendBtn.onclick = send;
+    input.addEventListener('keydown', e => {
+      if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send(); }
+    });
+
+    clearBtn.onclick = async ()=>{
+      log.innerHTML = '';
+      await fetch(`/api/conversation/reset/${sessionId}`, { method:'POST' });
+    };
+</script>
