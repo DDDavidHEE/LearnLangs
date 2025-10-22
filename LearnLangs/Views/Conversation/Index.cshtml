@@ -12,53 +12,90 @@
       div.textContent = `${role}: ${text ?? ''}`;
       log.appendChild(div);
       log.scrollTop = log.scrollHeight;
-      if (role === 'AI' && ttsChk?.checked) {
-        try { speechSynthesis.speak(new SpeechSynthesisUtterance(text ?? '')); } catch {}
+
+      if (role === 'AI' && ttsChk?.checked && text) {
+        try {
+          speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+        } catch(e) {
+          console.warn('TTS error:', e);
+        }
       }
     }
 
     async function send(){
       const text = (input.value || '').trim();
       if(!text) return;
+
       add('You', text);
       input.value = '';
       sendBtn.disabled = true;
 
-      // default tutor settings; you can later expose controls for these
       const targetLanguage = "English";
       const level = "beginner";
-      const goal  = "conversation";
+      const goal = "conversation";
 
       try{
         const res = await fetch('/api/conversation/send', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({ sessionId, text, targetLanguage, level, goal })
         });
 
-        const body = await res.text();
-        if(!res.ok){
-          add('AI', `⚠️ ${res.status} ${res.statusText}\n${body}`);
+        // Parse response as JSON
+        let data;
+        try {
+          data = await res.json();
+        } catch(e) {
+          add('AI', `⚠️ Invalid response format: ${e.message}`);
           return;
         }
-        const data = JSON.parse(body);
-        add('AI', data.reply || '(no content)');
-      }catch(e){
-        console.error(e);
-        add('AI', '⚠️ Network error');
-      }finally{
+
+        // Check if request was successful
+        if(!res.ok){
+          const errorMsg = data.error || data.details || res.statusText;
+          add('AI', `⚠️ Error ${res.status}: ${errorMsg}`);
+          console.error('API Error:', data);
+          return;
+        }
+
+        // Display AI response - FIXED: use "text" instead of "reply"
+        const aiText = data.text || data.reply || '(no content)';
+        add('AI', aiText);
+
+      } catch(e) {
+        console.error('Send error:', e);
+        add('AI', '⚠️ Network error: ' + e.message);
+      } finally {
         sendBtn.disabled = false;
         input.focus();
       }
     }
 
     sendBtn.onclick = send;
+
     input.addEventListener('keydown', e => {
-      if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send(); }
+      if(e.key === 'Enter' && !e.shiftKey){
+        e.preventDefault();
+        send();
+      }
     });
 
-    clearBtn.onclick = async ()=>{
-      log.innerHTML = '';
-      await fetch(`/api/conversation/reset/${sessionId}`, { method:'POST' });
+    clearBtn.onclick = async () => {
+      if(!confirm('Clear all messages?')) return;
+
+      try {
+        // FIXED: use correct endpoint "clear" instead of "reset"
+        await fetch('/api/conversation/clear', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(sessionId)
+        });
+        log.innerHTML = '';
+      } catch(e) {
+        console.error('Clear error:', e);
+      }
     };
+
+    // Welcome message
+    add('AI', 'Hello! How can I help you practice English today?');
 </script>

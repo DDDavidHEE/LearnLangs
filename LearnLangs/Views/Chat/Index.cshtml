@@ -5,131 +5,318 @@
 
 @section Head {
     <style>
-        .chat-wrap {
+        .chat-container {
             max-width: 980px;
-            margin: 16px auto;
-            padding: 0 12px
+            margin: 20px auto;
+            padding: 0 15px;
         }
 
-        .card {
+        .chat-card {
             background: #fff;
             border: 1px solid #e0e3e7;
             border-radius: 12px;
-            box-shadow: 0 1px 2px rgba(60,64,67,.3),0 2px 6px rgba(60,64,67,.15)
+            box-shadow: 0 1px 2px rgba(60,64,67,.3), 0 2px 6px rgba(60,64,67,.15);
+            overflow: hidden;
         }
 
-        .log {
-            height: 460px;
-            overflow: auto;
-            padding: 12px
+        .chat-header {
+            padding: 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e3e7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .msg {
-            margin: 8px 0;
-            white-space: pre-wrap
+        .chat-messages {
+            height: 500px;
+            overflow-y: auto;
+            padding: 20px;
+            background: #fafafa;
         }
 
-            .msg.me {
-                color: #0b57d0
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 80%;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+            .message.user {
+                background: #0b57d0;
+                color: white;
+                margin-left: auto;
+                text-align: right;
             }
 
-        .toolbar {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            margin-bottom: 8px
+            .message.assistant {
+                background: white;
+                border: 1px solid #e0e3e7;
+                margin-right: auto;
+            }
+
+        .message-label {
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            opacity: 0.7;
+            text-transform: uppercase;
         }
 
-        .input-row {
+        .chat-input-area {
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #e0e3e7;
+        }
+
+        .input-wrapper {
             display: flex;
-            gap: 8px;
-            margin-top: 12px
+            gap: 10px;
+        }
+
+        #messageInput {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px 15px;
+            resize: none;
+            font-family: inherit;
+        }
+
+        #sendButton {
+            min-width: 100px;
+            border-radius: 8px;
+        }
+
+            #sendButton:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+            }
+
+        .loading-indicator {
+            display: none;
+            padding: 10px;
+            text-align: center;
+            color: #666;
+        }
+
+            .loading-indicator.show {
+                display: block;
+            }
+
+        .error-message {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c00;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
         }
     </style>
 }
 
-<div class="chat-wrap">
-    <div class="toolbar">
-        <span class="badge text-bg-light">Session: <code id="sid">@sessionId</code></span>
-        <div class="form-check">
-            <input id="ttsChk" class="form-check-input" type="checkbox" checked />
-            <label class="form-check-label" for="ttsChk">Speak replies</label>
+<div class="chat-container">
+    <div class="chat-header mb-3">
+        <div>
+            <span class="badge bg-light text-dark">Session: <code id="sessionDisplay">@sessionId</code></span>
         </div>
-        <button id="clearBtn" class="btn btn-sm btn-outline-secondary rounded-pill">Clear</button>
+        <div class="d-flex gap-2 align-items-center">
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="ttsEnabled" checked>
+                <label class="form-check-label" for="ttsEnabled">
+                    <i class="bi bi-volume-up"></i> Speak replies
+                </label>
+            </div>
+            <button id="clearButton" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-trash"></i> Clear
+            </button>
+        </div>
     </div>
 
-    <div class="card">
-        <div id="log" class="log"></div>
+    <div class="chat-card">
+        <div id="chatMessages" class="chat-messages"></div>
+        <div class="loading-indicator" id="loadingIndicator">
+            <div class="spinner-border spinner-border-sm" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <span class="ms-2">AI is thinking...</span>
+        </div>
+        <div class="chat-input-area">
+            <div class="input-wrapper">
+                <textarea id="messageInput"
+                          class="form-control"
+                          rows="2"
+                          placeholder="Type your message here..."
+                          autofocus></textarea>
+                <button id="sendButton" class="btn btn-primary">
+                    <i class="bi bi-send"></i> Send
+                </button>
+            </div>
+        </div>
     </div>
 
-    <div class="input-row">
-        <textarea id="input" class="form-control" rows="2" placeholder="Type a message..."></textarea>
-        <button id="sendBtn" class="btn btn-primary rounded-pill px-4">Send</button>
+    <div class="text-muted small mt-2">
+        <i class="bi bi-info-circle"></i> Messages are saved for this session only
     </div>
-
-    <div class="text-muted small mt-2">Tin nhắn được giữ ngữ cảnh trong session hiện tại.</div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.5/signalr.min.js"></script>
-<script>
-    const sessionId = document.getElementById('sid').textContent.trim();
-    const log = document.getElementById('log');
-    const input = document.getElementById('input');
-    const sendBtn = document.getElementById('sendBtn');
-    const clearBtn = document.getElementById('clearBtn');
-    const ttsChk = document.getElementById('ttsChk');
+@section Scripts {
+    <script>
+        (function() {
+            const sessionId = '@sessionId';
+            const chatMessages = document.getElementById('chatMessages');
+            const messageInput = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
+            const clearButton = document.getElementById('clearButton');
+            const ttsEnabled = document.getElementById('ttsEnabled');
+            const loadingIndicator = document.getElementById('loadingIndicator');
 
-    function add(role, text){
-      const div = document.createElement('div');
-      div.className = 'msg' + (role==='You' ? ' me' : '');
-      div.textContent = `${role}: ${text}`;
-      log.appendChild(div); log.scrollTop = log.scrollHeight;
-      if (role === 'AI' && ttsChk?.checked) speak(text);
-    }
+            // Add message to UI
+            function addMessage(role, text) {
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `message ${role}`;
 
-    function speak(t){
-      try { new SpeechSynthesisUtterance && speechSynthesis.speak(new SpeechSynthesisUtterance(t)); } catch {}
-    }
+                const label = document.createElement('div');
+                label.className = 'message-label';
+                label.textContent = role === 'user' ? 'You' : 'AI Assistant';
 
-    // ----- SignalR -----
-    const conn = new signalR.HubConnectionBuilder().withUrl("/hubs/chat").build();
+                const content = document.createElement('div');
+                content.textContent = text;
 
-    conn.on("assistant", (m) => {
-      console.log("[SR] assistant", m);
-      if (!m || m.sessionId !== sessionId) return;
-      add('AI', m.text || '(no content)');
-    });
+                msgDiv.appendChild(label);
+                msgDiv.appendChild(content);
+                chatMessages.appendChild(msgDiv);
 
-    conn.start()
-      .then(()=> conn.invoke("Join", sessionId))
-      .then(()=> console.log("[SR] joined", sessionId))
-      .catch(err=> console.error("[SR] error", err));
+                // Scroll to bottom
+                chatMessages.scrollTop = chatMessages.scrollHeight;
 
-    async function send(){
-      const text = (input.value || "").trim();
-      if(!text) return;
-      add('You', text);
-      input.value = '';
+                // Text-to-speech for AI
+                if (role === 'assistant' && ttsEnabled.checked && text) {
+                    speakText(text);
+                }
+            }
 
-      try{
-        const res = await fetch('/api/chat/send', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ sessionId, text })
-        });
-        if(!res.ok){
-          const body = await res.text();
-          add('AI', `⚠️ API error ${res.status}: ${body}`);
-        }
-      }catch(e){
-        console.error(e);
-        add('AI', '⚠️ Network error');
-      }
-    }
+            // Show error
+            function showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.innerHTML = `<strong>Error:</strong> ${message}`;
+                chatMessages.appendChild(errorDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
 
-    sendBtn.onclick = send;
-    input.addEventListener('keydown', e => {
-      if(e.key==='Enter' && !e.ctrlKey){ e.preventDefault(); send(); }
-    });
-    clearBtn.onclick = ()=> log.innerHTML='';
-</script>
+            // Text-to-speech
+            function speakText(text) {
+                try {
+                    if ('speechSynthesis' in window) {
+                        const utterance = new SpeechSynthesisUtterance(text);
+                        utterance.lang = 'en-US';
+                        utterance.rate = 0.9;
+                        speechSynthesis.speak(utterance);
+                    }
+                } catch (e) {
+                    console.warn('TTS error:', e);
+                }
+            }
+
+            // Send message
+            async function send() {
+                const text = messageInput.value.trim();
+                if (!text) return;
+
+                // Disable input
+                messageInput.disabled = true;
+                sendButton.disabled = true;
+                loadingIndicator.classList.add('show');
+
+                // Show user message
+                addMessage('user', text);
+                messageInput.value = '';
+
+                try {
+                    console.log('Sending to API:', {sessionId, text});
+
+                    const response = await fetch('/api/conversation/send', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            sessionId: sessionId,
+                            text: text,
+                            targetLanguage: 'English',
+                            level: 'beginner',
+                            goal: 'conversation'
+                        })
+                    });
+
+                    console.log('Response status:', response.status);
+
+                    // Parse JSON
+                    let data;
+                    try {
+                        data = await response.json();
+                        console.log('Response data:', data);
+                    } catch (e) {
+                        console.error('JSON parse error:', e);
+                        showError('Invalid response format from server');
+                        return;
+                    }
+
+                    // Check success
+                    if (!response.ok) {
+                        const errorMsg = data.error || data.details || response.statusText;
+                        showError(`API Error ${response.status}: ${errorMsg}`);
+                        console.error('API Error:', data);
+                        return;
+                    }
+
+                    // Show AI response
+                    const aiText = data.text || data.reply || '(no content)';
+                    addMessage('assistant', aiText);
+
+                } catch (error) {
+                    console.error('Send error:', error);
+                    showError('Network error: ' + error.message);
+                } finally {
+                    // Re-enable input
+                    messageInput.disabled = false;
+                    sendButton.disabled = false;
+                    loadingIndicator.classList.remove('show');
+                    messageInput.focus();
+                }
+            }
+
+            // Event listeners
+            sendButton.addEventListener('click', send);
+
+            messageInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    send();
+                }
+            });
+
+            clearButton.addEventListener('click', async () => {
+                if (!confirm('Clear all messages?')) return;
+
+                try {
+                    await fetch('/api/conversation/clear', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(sessionId)
+                    });
+                    chatMessages.innerHTML = '';
+                    addMessage('assistant', 'Hello! How can I help you practice English today?');
+                } catch (e) {
+                    console.error('Clear error:', e);
+                }
+            });
+
+            // Welcome message
+            addMessage('assistant', 'Hello! How can I help you practice English today?');
+        })();
+    </script>
+}
