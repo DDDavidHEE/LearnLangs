@@ -1,6 +1,7 @@
 ﻿using LearnLangs.Models;
 using LearnLangs.Models.Dictation;
 using LearnLangs.Models.Flashcards;
+using LearnLangs.Models.Games;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -28,11 +29,19 @@ namespace LearnLangs.Data
         public DbSet<FlashcardCard> FlashcardCards => Set<FlashcardCard>();
         // Nếu có Category: public DbSet<FlashcardCategory> FlashcardCategories => Set<FlashcardCategory>();
 
+        // ===== Games & Exams =====
+        public DbSet<GameLevel> GameLevels => Set<GameLevel>();
+        public DbSet<GameQuestion> GameQuestions => Set<GameQuestion>();
+        public DbSet<GameResult> GameResults => Set<GameResult>();
+        public DbSet<Exam> Exams => Set<Exam>();
+        public DbSet<ExamAttempt> ExamAttempts => Set<ExamAttempt>();
+
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
-            // ---------------- Indexes & constraints (Core) ----------------
+            // ---------------- Core Learning ----------------
             builder.Entity<Lesson>()
                 .HasIndex(l => new { l.CourseId, l.OrderIndex })
                 .IsUnique();
@@ -41,7 +50,7 @@ namespace LearnLangs.Data
                 .HasIndex(ul => new { ul.UserId, ul.LessonId })
                 .IsUnique();
 
-            // Dictation: Topic 1-n Set, Set 1-n Item
+            // ---------------- Dictation ----------------
             builder.Entity<DictationSet>()
                 .HasOne(s => s.Topic)
                 .WithMany(t => t.Sets)
@@ -64,7 +73,7 @@ namespace LearnLangs.Data
                 .HasIndex(p => new { p.UserId, p.SetId })
                 .IsUnique();
 
-            // ---------------- Flashcards: quan hệ & index ----------------
+            // ---------------- Flashcards ----------------
             builder.Entity<FlashcardCard>()
                 .HasOne(c => c.Deck)
                 .WithMany(d => d.Cards)
@@ -77,7 +86,33 @@ namespace LearnLangs.Data
             builder.Entity<FlashcardCard>()
                 .HasIndex(c => new { c.DeckId, c.OrderIndex });
 
-            // ---------------- Seed demo courses (giữ nguyên) ----------------
+            // ---------------- Games ----------------
+            builder.Entity<GameLevel>()
+                .HasMany(l => l.Questions)
+                .WithOne(q => q.GameLevel)
+                .HasForeignKey(q => q.GameLevelId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<GameResult>()
+                .HasIndex(r => new { r.UserId, r.GameLevelId });
+
+            // ---------------- Exams ----------------
+            builder.Entity<Exam>()
+                .HasOne(e => e.GameLevel)
+                .WithMany()
+                .HasForeignKey(e => e.GameLevelId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<ExamAttempt>()
+                .HasOne(a => a.Exam)
+                .WithMany(e => e.Attempts)
+                .HasForeignKey(a => a.ExamId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<ExamAttempt>()
+                .HasIndex(a => new { a.UserId, a.ExamId });
+
+            // ---------------- Seed dữ liệu demo ----------------
             builder.Entity<Course>().HasData(
                 new Course { Id = 1, Name = "Spanish – Beginner", Description = "Basics of Spanish" }
             );
@@ -92,7 +127,7 @@ namespace LearnLangs.Data
                 new Question { Id = 2, LessonId = 2, Prompt = "Dos = ?", IsMultipleChoice = true, OptionA = "One", OptionB = "Two", OptionC = "Three", OptionD = "Four", CorrectAnswer = "B" }
             );
 
-            // ====== Seed: Chinese course (demo) ======
+            // ====== Chinese course (demo) ======
             const int chineseCourseId = 100;
             builder.Entity<Course>().HasData(
                 new Course { Id = chineseCourseId, Name = "Chinese course", Description = "Beginner Mandarin: greetings, numbers, self-intro with pinyin." }
@@ -105,26 +140,9 @@ namespace LearnLangs.Data
             );
 
             builder.Entity<Question>().HasData(
-                // L1 – Greetings
                 new Question { Id = 1001, LessonId = 101, Prompt = "“你好” nghĩa là gì?", IsMultipleChoice = true, OptionA = "Tạm biệt", OptionB = "Xin chào", OptionC = "Cảm ơn", OptionD = "Xin lỗi", CorrectAnswer = "B" },
                 new Question { Id = 1002, LessonId = 101, Prompt = "“早上好” nghĩa là…", IsMultipleChoice = true, OptionA = "Chào buổi sáng", OptionB = "Chúc ngủ ngon", OptionC = "Chúc mừng", OptionD = "Hẹn gặp lại", CorrectAnswer = "A" },
-                new Question { Id = 1003, LessonId = 101, Prompt = "“你好吗？” nghĩa là…", IsMultipleChoice = true, OptionA = "Bạn tên gì?", OptionB = "Bạn khỏe không?", OptionC = "Bạn ở đâu?", OptionD = "Bạn bao nhiêu tuổi?", CorrectAnswer = "B" },
-                new Question { Id = 1004, LessonId = 101, Prompt = "Trả lời lịch sự cho “你好吗？”", IsMultipleChoice = true, OptionA = "我很好，谢谢。", OptionB = "对不起。", OptionC = "再见。", OptionD = "没关系。", CorrectAnswer = "A" },
-                new Question { Id = 1005, LessonId = 101, Prompt = "“再见” nghĩa là…", IsMultipleChoice = true, OptionA = "Cảm ơn", OptionB = "Tạm biệt", OptionC = "Xin chào", OptionD = "Không sao", CorrectAnswer = "B" },
-
-                // L2 – Numbers
-                new Question { Id = 1011, LessonId = 102, Prompt = "Số “四” là số nào?", IsMultipleChoice = true, OptionA = "3", OptionB = "4", OptionC = "5", OptionD = "6", CorrectAnswer = "B" },
-                new Question { Id = 1012, LessonId = 102, Prompt = "Pinyin đúng của “八” là…", IsMultipleChoice = true, OptionA = "bā", OptionB = "bá", OptionC = "bǎ", OptionD = "bà", CorrectAnswer = "A" },
-                new Question { Id = 1013, LessonId = 102, Prompt = "“九” là…", IsMultipleChoice = true, OptionA = "6", OptionB = "7", OptionC = "8", OptionD = "9", CorrectAnswer = "D" },
-                new Question { Id = 1014, LessonId = 102, Prompt = "“liù” viết Hán tự là…", IsMultipleChoice = true, OptionA = "六", OptionB = "九", OptionC = "二", OptionD = "十", CorrectAnswer = "A" },
-                new Question { Id = 1015, LessonId = 102, Prompt = "Số “10” trong tiếng Trung là…", IsMultipleChoice = true, OptionA = "百", OptionB = "千", OptionC = "十", OptionD = "万", CorrectAnswer = "C" },
-
-                // L3 – Self-Introduction
-                new Question { Id = 1021, LessonId = 103, Prompt = "“我叫…” dùng khi nào?", IsMultipleChoice = true, OptionA = "Nói tuổi", OptionB = "Nói quê quán", OptionC = "Nói tên", OptionD = "Nói nghề nghiệp", CorrectAnswer = "C" },
-                new Question { Id = 1022, LessonId = 103, Prompt = "Câu hỏi để hỏi tên người khác:", IsMultipleChoice = true, OptionA = "你叫什么名字？", OptionB = "你多大？", OptionC = "你来自哪里？", OptionD = "你做什么工作？", CorrectAnswer = "A" },
-                new Question { Id = 1023, LessonId = 103, Prompt = "“我来自越南。” nghĩa là…", IsMultipleChoice = true, OptionA = "Tôi đến từ Việt Nam", OptionB = "Tôi yêu Việt Nam", OptionC = "Tôi ở Việt Nam", OptionD = "Tôi nói tiếng Việt", CorrectAnswer = "A" },
-                new Question { Id = 1024, LessonId = 103, Prompt = "“我是学生。” tương đương…", IsMultipleChoice = true, OptionA = "I am a teacher", OptionB = "I am a student", OptionC = "I am from China", OptionD = "My name is…", CorrectAnswer = "B" },
-                new Question { Id = 1025, LessonId = 103, Prompt = "“很高兴认识你。” nghĩa là…", IsMultipleChoice = true, OptionA = "Cảm ơn", OptionB = "Xin lỗi", OptionC = "Rất vui được gặp bạn", OptionD = "Hẹn gặp lại", CorrectAnswer = "C" }
+                new Question { Id = 1003, LessonId = 101, Prompt = "“你好吗？” nghĩa là…", IsMultipleChoice = true, OptionA = "Bạn tên gì?", OptionB = "Bạn khỏe không?", OptionC = "Bạn ở đâu?", OptionD = "Bạn bao nhiêu tuổi?", CorrectAnswer = "B" }
             );
 
             // ====== Seed Dictation DEMO (tuỳ chọn) ======

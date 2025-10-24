@@ -1,0 +1,134 @@
+﻿@model LearnLangs.Models.Games.GameLevel
+@using System.Text.Json
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = Model.Name;
+    var total = Model.Questions.Count;
+}
+<link rel="stylesheet" href="~/css/games.css" />
+
+<div class="space-bg">
+    <!-- HUD -->
+    <div class="game-hud">
+        <div class="hud-score" id="hudScore">SCORE 0</div>
+        <div class="hud-time" id="hudTime">20:00</div>
+        <div style="font-weight:700">@User.Identity?.Name</div>
+        <div style="opacity:.8">ID: <span id="hudId">—</span></div>
+        <div class="mt-2">Round: <span id="hudRound">1</span></div>
+        <div class="hud-progress mt-2"><div id="hudBar"></div></div>
+    </div>
+
+    <!-- BOARD -->
+    <div class="board">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="board-title">@Model.Name</div>
+            <div class="badge bg-light text-dark fs-6" style="border-radius:999px">
+                <span id="qIndex">1</span>/<span>@total</span>
+            </div>
+        </div>
+
+        <!-- Question (one line only) -->
+        <div id="qText" class="board-sub mb-2"></div>
+
+        <div class="answer-box">
+            <input id="answer" class="answer-input" placeholder="Type your answer here..." autocomplete="off" />
+        </div>
+
+        <button id="btnAnswer" class="btn-orange">ANSWER</button>
+    </div>
+
+    <!-- Advice -->
+    <div id="advice" class="speech" style="display:none">Put in more effort and it will pay off!</div>
+
+    <!-- Result -->
+    <div id="result" class="result-modal" style="display:none">
+        <h1>Result</h1>
+        <div class="mb-2">Score: <span class="num" id="resScore">0</span></div>
+        <div class="mb-3">Your Total Time: <span class="num" id="resTime">00:00</span></div>
+        <a class="btn btn-light" href="/games">OK</a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function getParam(name){ return new URLSearchParams(location.search).get(name); }
+        function el(id){ return document.getElementById(id); }
+        function mmss(sec){ var m=String(Math.floor(sec/60)).padStart(2,'0'); var s=String(sec%60).padStart(2,'0'); return m+":"+s; }
+
+        const examId = getParam('examId');
+        const levelId = @Model.Id;
+        const qs = @Html.Raw(JsonSerializer.Serialize(
+        Model.Questions.Select(q => new { id = q.Id, stem = q.Prompt ?? "", answer = q.CorrectText ?? "" })
+    ));
+
+        let i=0, correct=0, score=0;
+        const total = qs.length;
+        const totalSeconds = 20*60;
+        let left = totalSeconds;
+        const startAt = Date.now();
+        let stopped=false, finished=false;
+
+        const hudScore=el('hudScore'), hudTime=el('hudTime'), hudBar=el('hudBar');
+        const qIndex=el('qIndex'), qText=el('qText');
+        const advice=el('advice'), result=el('result'), resScore=el('resScore'), resTime=el('resTime');
+
+        function render(){
+          if(i>=total){ finish(); return; }
+          const q = qs[i];
+          qIndex.textContent = (i+1);
+          const html = (q.stem.indexOf("___")>=0)
+              ? q.stem.replace(/___/g,'<u>&nbsp;</u>')
+              : q.stem;
+          qText.innerHTML = html;
+          const ans = el('answer'); ans.value=""; ans.disabled=false; ans.focus();
+          hudBar.style.width = (Math.round((i/total)*100)) + "%";
+        }
+
+        function tick(){
+          if(stopped||finished) return;
+          left = Math.max(0, totalSeconds - Math.floor((Date.now()-startAt)/1000));
+          hudTime.textContent = mmss(left);
+          if(left<=0){ stopped=true; finish(); return; }
+          requestAnimationFrame(tick);
+        }
+
+        async function grade(){
+          if(finished) return;
+          const q = qs[i];
+          const userAns = el('answer').value.trim();
+          const res = await fetch("/games/grade/"+q.id+"?levelId="+levelId, {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ payload: userAns })
+          });
+          const j = await res.json();
+          if(j.correct){
+            correct++; score += j.score;
+            hudScore.textContent = "SCORE " + score;
+            i++; render();
+          }else{
+            const ans = el('answer'); ans.value=q.answer; ans.style.borderColor="#ff7a7a"; ans.disabled=true;
+            setTimeout(function(){ ans.style.borderColor="#6aa9ff"; i++; render(); }, 1200);
+          }
+        }
+
+        async function finish(){
+          if(finished) return;
+          finished=true; stopped=true;
+          document.querySelector('.board').style.display='none';
+          advice.style.display='block';
+          const spent = totalSeconds - left;
+          resScore.textContent = score;
+          resTime.textContent = mmss(spent);
+          result.style.display='block';
+          await fetch('/games/finish' + (examId ? ('?examId='+examId) : ''), {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ levelId:@Model.Id, total:@total, correct, score, seconds: spent })
+          });
+        }
+
+        el('btnAnswer').addEventListener('click', grade);
+        el('answer').addEventListener('keydown', e => { if(e.key==='Enter') grade(); });
+
+        render(); tick();
+    </script>
+}

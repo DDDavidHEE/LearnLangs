@@ -1,6 +1,86 @@
 ﻿@{
-    ViewData["Title"] = "Dashboard";
+    ViewData["Title"] = "Home";
+    Layout = "_Layout";
 }
-<div class="container-xxl">
-    <!-- để trống hoặc thêm các shortcut/cards sau này -->
-</div>
+<link rel="stylesheet" href="~/css/home.css" asp-append-version="true" />
+
+<section class="hero-section text-center">
+    <div class="container">
+        <h1 class="display-5 fw-bold text-gradient mb-3">
+            Master Languages with <span class="brand">LearnLangs</span>
+        </h1>
+        <p class="lead text-secondary mx-auto" style="max-width:680px;">
+            The AI-powered language learning platform that helps you speak, listen, read, and write naturally like a native speaker.
+        </p>
+        <div class="mt-4">
+            <a href="/Translate" class="btn btn-primary btn-lg px-4 rounded-pill shadow-sm">
+                Start Learning Now <i class="bi bi-arrow-right-circle ms-1"></i>
+            </a>
+        </div>
+        <div class="stats mt-5 d-flex flex-wrap justify-content-center gap-4 text-secondary small">
+            <div><i class="bi bi-people-fill text-primary"></i> <b>30,000+</b> active learners per month</div>
+            <div><i class="bi bi-lightning-charge text-warning"></i> <b>98%</b> improved speaking confidence</div>
+            <div><i class="bi bi-trophy text-success"></i> <b>4.8/5</b> average user rating</div>
+        </div>
+    </div>
+</section>
+
+<section class="features-section py-5">
+    <div class="container">
+        <div class="row g-4 justify-content-center">
+            <div class="col-12 col-md-4">
+                <div class="feature-card p-4 text-center h-100">
+                    <div class="icon-wrap bg-gradient-primary mb-3">
+                        <i class="bi bi-translate fs-2 text-white"></i>
+                    </div>
+                    <h5 class="fw-semibold mb-2">AI Translation & Vocabulary</h5>
+                    <p class="text-secondary small mb-0">
+                        Translate instantly with AI, save new words to Flashcards, and reinforce memory through fun learning games.
+                    </p>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="feature-card p-4 text-center h-100">
+                    <div class="icon-wrap bg-gradient-success mb-3">
+                        <i class="bi bi-chat-dots fs-2 text-white"></i>
+                    </div>
+                    <h5 class="fw-semibold mb-2">AI Conversation Partner</h5>
+                    <p class="text-secondary small mb-0">
+                        Practice real-life dialogues with an AI tutor — boost fluency, confidence, and pronunciation in natural contexts.
+                    </p>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="feature-card p-4 text-center h-100">
+                    <div class="icon-wrap bg-gradient-danger mb-3">
+                        <i class="bi bi-mic-fill fs-2 text-white"></i>
+                    </div>
+                    <h5 class="fw-semibold mb-2">Pronunciation Training</h5>
+                    <p class="text-secondary small mb-0">
+                        Get instant pronunciation feedback based on the CEFR standard — improve every syllable and sound clarity.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="testimonial-section text-center py-5">
+    <div class="container">
+        <h3 class="fw-bold mb-4">What Learners Say About LearnLangs</h3>
+        <div class="row justify-content-center g-4">
+            <div class="col-md-4">
+                <div class="testi-card p-4 shadow-sm">
+                    <p class="fst-italic">"I improved my IELTS speaking score from 6.0 to 7.5 after practicing daily with the AI conversation mode. It’s amazing!"</p>
+                    <div class="fw-semibold mt-2">— Linh, University Student</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="testi-card p-4 shadow-sm">
+                    <p class="fst-italic">"The pronunciation assessment is super accurate — it feels like having a personal native teacher giving detailed feedback."</p>
+                    <div class="fw-semibold mt-2">— Nam, Software Engineer</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

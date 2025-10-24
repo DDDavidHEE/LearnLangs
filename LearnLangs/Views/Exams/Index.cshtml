@@ -1,0 +1,48 @@
+﻿@model IEnumerable<LearnLangs.Controllers.ExamsController.ExamRowVm>
+@{
+    ViewData["Title"] = "Thi từ vựng";
+}
+<div class="container my-4">
+    <h4 class="mb-3">Xếp hạng của bạn sẽ được cập nhật trong vòng 24h sau khi hoàn thành vòng thi.</h4>
+
+    <div class="table-responsive">
+        <table class="table table-dark table-hover align-middle">
+            <thead>
+                <tr>
+                    <th style="width:70px">STT</th>
+                    <th>BÀI THI</th>
+                    <th style="width:120px">LẦN THI</th>
+                    <th style="width:140px">ĐIỂM ĐÃ THI</th>
+                    <th style="width:160px">THỜI GIAN (GIÂY)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    var idx = 1;
+                    foreach (var r in Model)
+                    {
+                        <tr>
+                            <td>@idx</td>
+                            <td><a class="btn btn-info fw-bold" href="/exams/start/@r.Id">@r.Title</a></td>
+                            <td>@r.Attempts</td>
+                            <td class="text-danger fw-bold">@r.LastScore</td>
+                            <td class="text-danger fw-bold">@r.LastDuration</td>
+                        </tr>
+                        ;
+                        idx++;
+                    }
+                }
+                <tr class="table-secondary">
+                    <td colspan="3" class="text-danger fw-bold">Kết quả tự luyện</td>
+                    <td class="text-danger fw-bold">@Model.Sum(x => x.LastScore)</td>
+                    <td class="text-danger fw-bold">@Model.Sum(x => x.LastDuration)</td>
+                </tr>
+                <tr class="table-secondary">
+                    <td colspan="3" class="text-danger fw-bold">Kết quả cao nhất</td>
+                    <td class="text-danger fw-bold">@Model.Max(x => x.BestScore)</td>
+                    <td class="text-danger fw-bold">@Model.Where(x => x.BestScore == Model.Max(m => m.BestScore)).Select(x => x.BestDuration).FirstOrDefault()</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

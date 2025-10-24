@@ -1,0 +1,112 @@
+﻿/* =========================================================
+   Home (Landing Page)
+   ========================================================= */
+.hero-section {
+    padding: 80px 16px 60px;
+    background: radial-gradient(circle at 20% 30%, #f0f6ff 0%, #ffffff 90%);
+    animation: fadeIn .8s ease;
+}
+
+.text-gradient {
+    background: linear-gradient(90deg, #0d6efd, #6610f2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero-section .brand {
+    color: #0d6efd;
+}
+
+.stats div {
+    opacity: .85;
+    font-weight: 500;
+}
+
+/* Features */
+.features-section {
+    background: linear-gradient(180deg, #f9fbff 0%, #ffffff 100%);
+}
+
+.feature-card {
+    border: 1px solid rgba(0,0,0,.06);
+    border-radius: 1rem;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,.04);
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 20px rgba(0,0,0,.08);
+    }
+
+.icon-wrap {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-inline: auto;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #007bff, #6610f2);
+}
+
+.bg-gradient-success {
+    background: linear-gradient(135deg, #198754, #20c997);
+}
+
+.bg-gradient-danger {
+    background: linear-gradient(135deg, #dc3545, #fd7e14);
+}
+
+/* Testimonials */
+.testimonial-section {
+    background: #f8f9fc;
+}
+
+.testi-card {
+    border-radius: 1rem;
+    background: #fff;
+    border: 1px solid rgba(0,0,0,.05);
+}
+
+    .testi-card p {
+        color: #555;
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+
+/* Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Dark mode */
+[data-bs-theme="dark"] .hero-section {
+    background: radial-gradient(circle at 20% 30%, #0f1320 0%, #101520 100%);
+}
+
+[data-bs-theme="dark"] .feature-card {
+    background: #111827;
+    border-color: #1f2937;
+}
+
+[data-bs-theme="dark"] .testi-card {
+    background: #10141f;
+    border-color: #1f283a;
+}
+
+[data-bs-theme="dark"] .testimonial-section {
+    background: #0e1220;
+}

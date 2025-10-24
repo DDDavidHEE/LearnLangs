@@ -19,7 +19,6 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
 }
-
     /* Scrollbar nhẹ cho sidebar (WebKit) */
     .app-sidebar::-webkit-scrollbar {
         width: 8px;
@@ -75,8 +74,6 @@
 /* =========================================================
    Flashcard - FIX LAYOUT GIỐNG MẪU
    ========================================================= */
-
-/* 1. Fix cho trang danh sách deck (Index) */
 .card {
     display: flex;
     flex-direction: column;
@@ -98,7 +95,7 @@
     flex-direction: column;
 }
 
-/* 2. Fix cho trang Play flashcard - QUAN TRỌNG */
+/* 2. Play flashcard */
 #fc-player {
     max-width: 700px;
     margin: 0 auto;
@@ -129,7 +126,6 @@
         padding: 2rem 1.5rem;
     }
 
-    /* Button trong flashcard player */
     #fc-player .btn {
         min-width: 100px;
     }
@@ -154,7 +150,7 @@
 
     #fc-player .btn {
         min-width: 80px;
-        font-size: 0.9rem;
+        font-size: .9rem;
     }
 }
 
@@ -188,7 +184,6 @@
     white-space: normal;
 }
 
-/* Button hover/active cảm giác tốt hơn một chút */
 .btn {
     transition: transform .06s ease, box-shadow .12s ease, background-color .12s ease;
 }
@@ -198,7 +193,7 @@
     }
 
 /* =========================================================
-   Dark mode (Bootstrap 5.3: <body data-bs-theme="dark">)
+   Dark mode
    ========================================================= */
 [data-bs-theme="dark"] .app-sidebar .nav-link {
     color: var(--bs-secondary-color);
@@ -220,18 +215,16 @@
 }
 
 /* =========================================================
-   Motion prefer (giảm animation nếu người dùng bật Reduce Motion)
+   Motion prefer
    ========================================================= */
 @media (prefers-reduced-motion: reduce) {
-    .app-sidebar,
-    .btn,
-    .app-sidebar .nav-link {
+    .app-sidebar, .btn, .app-sidebar .nav-link {
         transition: none !important;
     }
 }
 
 /* =========================================================
-   (Optional) Dictation polish (nếu bạn đang dùng trang Dictation)
+   (Optional) Dictation polish
    ========================================================= */
 .dic-list {
     display: grid;
@@ -342,3 +335,97 @@
     border-radius: .75rem;
     font-weight: 600;
 }
+
+/* =========================================================
+   Pro Footer
+   ========================================================= */
+.app-footer {
+    margin-top: 32px;
+    background: #ffffff;
+    border-top: 1px solid rgba(0,0,0,.06);
+}
+
+    .app-footer .footer-wrap {
+        padding: 28px 16px 18px;
+    }
+
+    .app-footer .footer-title {
+        font-weight: 700;
+        font-size: .95rem;
+        letter-spacing: .3px;
+        margin-bottom: .4rem;
+    }
+
+    .app-footer .footer-links {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+        .app-footer .footer-links li + li {
+            margin-top: .35rem;
+        }
+
+        .app-footer .footer-links a {
+            color: #6c757d;
+            text-decoration: none;
+        }
+
+            .app-footer .footer-links a:hover {
+                color: #0d6efd;
+                text-decoration: underline;
+            }
+
+    .app-footer .footer-social {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(0,0,0,.12);
+        border-radius: 50%;
+        color: #495057;
+        text-decoration: none;
+        transition: .2s;
+    }
+
+        .app-footer .footer-social:hover {
+            color: #0d6efd;
+            border-color: #0d6efd;
+            transform: translateY(-1px);
+        }
+
+    .app-footer .footer-bottom {
+        border-top: 1px dashed rgba(0,0,0,.06);
+        padding: 10px 16px;
+        background: linear-gradient(180deg, #fff, #f8f9fb);
+    }
+
+/* Dark mode cho footer */
+html[data-bs-theme="dark"] .app-footer {
+    background: #0f1320;
+    border-top-color: #22283b;
+}
+
+    html[data-bs-theme="dark"] .app-footer .footer-bottom {
+        background: linear-gradient(180deg, #0f1320, #0b0f1b);
+        border-top-color: #22283b;
+    }
+
+    html[data-bs-theme="dark"] .app-footer .footer-links a {
+        color: #aab2c5;
+    }
+
+        html[data-bs-theme="dark"] .app-footer .footer-links a:hover {
+            color: #6aa9ff;
+        }
+
+    html[data-bs-theme="dark"] .app-footer .footer-social {
+        color: #aab2c5;
+        border-color: #28304a;
+    }
+
+        html[data-bs-theme="dark"] .app-footer .footer-social:hover {
+            color: #6aa9ff;
+            border-color: #6aa9ff;
+        }

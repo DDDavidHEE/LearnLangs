@@ -5,6 +5,7 @@ using LearnLangs.Options;
 using LearnLangs.Services.Chat;
 using LearnLangs.Services.Pronunciation;
 using LearnLangs.Services.Translate;
+using LearnLangs.Services.Games;           
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -50,7 +51,7 @@ builder.Services.AddSignalR();
 builder.Services.Configure<AzureTranslatorOptions>(
     builder.Configuration.GetSection("AzureTranslator"));
 
-builder.Services.AddHttpClient<ITranslateService, AzureTranslatorService>((serviceProvider, http) =>
+builder.Services.AddHttpClient<ITranslateService, AzureTranslatorService>((sp, http) =>
 {
     http.Timeout = TimeSpan.FromSeconds(30);
     http.DefaultRequestHeaders.Accept.Clear();
@@ -64,53 +65,30 @@ builder.Services.Configure<GeminiAiOptions>(
 // Post-configure: Fallback API key & ApiVersion
 builder.Services.PostConfigure<GeminiAiOptions>(opt =>
 {
-    // Fallback API key from multiple sources
     if (string.IsNullOrWhiteSpace(opt.ApiKey))
     {
-        // Try 1: davidheapikey (legacy)
         var key = builder.Configuration["davidheapikey"];
-
-        // Try 2: GeminiAI:ApiKey (preferred)
         if (string.IsNullOrWhiteSpace(key))
-        {
             key = builder.Configuration["GeminiAI:ApiKey"];
-        }
-
         if (!string.IsNullOrWhiteSpace(key))
-        {
             opt.ApiKey = key;
-        }
     }
 
-    // Auto-detect ApiVersion based on model
     if (string.IsNullOrWhiteSpace(opt.ApiVersion))
     {
         var model = (opt.Model ?? "").ToLowerInvariant();
-
-        // Gemini 1.x uses v1
-        if (model.StartsWith("gemini-1.") ||
-            model.StartsWith("gemini-1-") ||
-            model.StartsWith("gemini-1_") ||
-            model.Contains("1.5"))
-        {
+        if (model.StartsWith("gemini-1.") || model.StartsWith("gemini-1-") || model.StartsWith("gemini-1_") || model.Contains("1.5"))
             opt.ApiVersion = "v1";
-        }
         else
-        {
-            // Gemini 2.x uses v1beta
             opt.ApiVersion = "v1beta";
-        }
     }
 
-    // Default endpoint
     if (string.IsNullOrWhiteSpace(opt.Endpoint))
-    {
         opt.Endpoint = "https://generativelanguage.googleapis.com";
-    }
 });
 
 // ==================== GEMINI: PRONUNCIATION ====================
-builder.Services.AddHttpClient<IGeminiPronunciationService, GeminiPronunciationService>((serviceProvider, http) =>
+builder.Services.AddHttpClient<IGeminiPronunciationService, GeminiPronunciationService>((sp, http) =>
 {
     http.Timeout = TimeSpan.FromSeconds(60);
     http.DefaultRequestHeaders.Accept.Clear();
@@ -118,12 +96,15 @@ builder.Services.AddHttpClient<IGeminiPronunciationService, GeminiPronunciationS
 });
 
 // ==================== GEMINI: CHAT (CONVERSATION) ====================
-builder.Services.AddHttpClient<IGeminiChatService, GeminiChatService>((serviceProvider, http) =>
+builder.Services.AddHttpClient<IGeminiChatService, GeminiChatService>((sp, http) =>
 {
     http.Timeout = TimeSpan.FromSeconds(60);
     http.DefaultRequestHeaders.Accept.Clear();
     http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 });
+
+// ==================== GAMES/EXAMS DI ====================
+builder.Services.AddScoped<GameService>();   // 👈 NEW
 
 // ==================== BUILD APP ====================
 var app = builder.Build();
@@ -135,6 +116,11 @@ using (var scope = app.Services.CreateScope())
     {
         await SeedData.EnsureSeededAsync(scope.ServiceProvider);
         await IdentitySeed.EnsureAdminAsync(scope.ServiceProvider);
+
+        // 👇 NEW: seed Games/Exams demo (nếu bạn tạo GameSeed/ExamSeed)
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await LearnLangs.Data.GameSeed.SeedAsync(db);
+        await LearnLangs.Data.ExamSeed.SeedAsync(db);
     }
     catch (Exception ex)
     {
@@ -161,13 +147,9 @@ app.Logger.LogInformation(
     !string.IsNullOrEmpty(geminiOpts.ApiKey)
 );
 
-// WARNING: Log if API key is missing
 if (string.IsNullOrEmpty(geminiOpts.ApiKey))
 {
-    app.Logger.LogWarning(
-        "⚠️ [GeminiAI] API Key is NOT SET! " +
-        "Set it using: dotnet user-secrets set \"GeminiAI:ApiKey\" \"YOUR_KEY\""
-    );
+    app.Logger.LogWarning("⚠️ [GeminiAI] API Key is NOT SET! Set it using: dotnet user-secrets set \"GeminiAI:ApiKey\" \"YOUR_KEY\"");
 }
 
 // ==================== MIDDLEWARE PIPELINE ====================
@@ -191,8 +173,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // ==================== ROUTING ====================
-
-// SignalR Hubs
 app.MapHub<ChatHub>("/hubs/chat");
 
 // MVC Routes
@@ -200,7 +180,7 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// API Controllers (attribute-routed like [Route("api/conversation")])
+// API Controllers (attribute-routed)
 app.MapControllers();
 
 // Razor Pages
