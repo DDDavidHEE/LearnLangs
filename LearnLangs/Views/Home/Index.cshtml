@@ -1,86 +1,1163 @@
 ﻿@{
-    ViewData["Title"] = "Home";
-    Layout = "_Layout";
+    Layout = null;
 }
-<link rel="stylesheet" href="~/css/home.css" asp-append-version="true" />
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LearnLangs - Học ngôn ngữ miễn phí với AI Tutor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-<section class="hero-section text-center">
-    <div class="container">
-        <h1 class="display-5 fw-bold text-gradient mb-3">
-            Master Languages with <span class="brand">LearnLangs</span>
-        </h1>
-        <p class="lead text-secondary mx-auto" style="max-width:680px;">
-            The AI-powered language learning platform that helps you speak, listen, read, and write naturally like a native speaker.
-        </p>
-        <div class="mt-4">
-            <a href="/Translate" class="btn btn-primary btn-lg px-4 rounded-pill shadow-sm">
-                Start Learning Now <i class="bi bi-arrow-right-circle ms-1"></i>
-            </a>
-        </div>
-        <div class="stats mt-5 d-flex flex-wrap justify-content-center gap-4 text-secondary small">
-            <div><i class="bi bi-people-fill text-primary"></i> <b>30,000+</b> active learners per month</div>
-            <div><i class="bi bi-lightning-charge text-warning"></i> <b>98%</b> improved speaking confidence</div>
-            <div><i class="bi bi-trophy text-success"></i> <b>4.8/5</b> average user rating</div>
-        </div>
-    </div>
-</section>
+        body {
+            font-family: -apple-system,BlinkMacSystemFont,'Segoe UI','Roboto','Oxygen','Ubuntu',sans-serif;
+            color: #333;
+            overflow-x: hidden;
+        }
 
-<section class="features-section py-5">
-    <div class="container">
-        <div class="row g-4 justify-content-center">
-            <div class="col-12 col-md-4">
-                <div class="feature-card p-4 text-center h-100">
-                    <div class="icon-wrap bg-gradient-primary mb-3">
-                        <i class="bi bi-translate fs-2 text-white"></i>
-                    </div>
-                    <h5 class="fw-semibold mb-2">AI Translation & Vocabulary</h5>
-                    <p class="text-secondary small mb-0">
-                        Translate instantly with AI, save new words to Flashcards, and reinforce memory through fun learning games.
-                    </p>
-                </div>
-            </div>
-            <div class="col-12 col-md-4">
-                <div class="feature-card p-4 text-center h-100">
-                    <div class="icon-wrap bg-gradient-success mb-3">
-                        <i class="bi bi-chat-dots fs-2 text-white"></i>
-                    </div>
-                    <h5 class="fw-semibold mb-2">AI Conversation Partner</h5>
-                    <p class="text-secondary small mb-0">
-                        Practice real-life dialogues with an AI tutor — boost fluency, confidence, and pronunciation in natural contexts.
-                    </p>
-                </div>
-            </div>
-            <div class="col-12 col-md-4">
-                <div class="feature-card p-4 text-center h-100">
-                    <div class="icon-wrap bg-gradient-danger mb-3">
-                        <i class="bi bi-mic-fill fs-2 text-white"></i>
-                    </div>
-                    <h5 class="fw-semibold mb-2">Pronunciation Training</h5>
-                    <p class="text-secondary small mb-0">
-                        Get instant pronunciation feedback based on the CEFR standard — improve every syllable and sound clarity.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+        /* Header */
+        header {
+            background: #fff;
+            padding: 20px 0;
+            box-shadow: 0 2px 8px rgba(74,144,226,.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
 
-<section class="testimonial-section text-center py-5">
-    <div class="container">
-        <h3 class="fw-bold mb-4">What Learners Say About LearnLangs</h3>
-        <div class="row justify-content-center g-4">
-            <div class="col-md-4">
-                <div class="testi-card p-4 shadow-sm">
-                    <p class="fst-italic">"I improved my IELTS speaking score from 6.0 to 7.5 after practicing daily with the AI conversation mode. It’s amazing!"</p>
-                    <div class="fw-semibold mt-2">— Linh, University Student</div>
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #4A90E2;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg,#4A90E2,#63B3ED);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: bold;
+            font-size: 22px;
+            box-shadow: 0 4px 12px rgba(74,144,226,.3);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 35px;
+            align-items: center;
+        }
+
+            .nav-links a {
+                text-decoration: none;
+                color: #555;
+                font-weight: 500;
+                transition: color .3s;
+                font-size: 15px;
+            }
+
+                .nav-links a:hover {
+                    color: #4A90E2;
+                }
+
+        .btn {
+            padding: 12px 30px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .3s;
+            border: none;
+            font-size: 15px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg,#4A90E2,#357ABD);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(74,144,226,.3);
+        }
+
+            .btn-primary:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(74,144,226,.4);
+            }
+
+        .btn-secondary {
+            background: #fff;
+            color: #4A90E2;
+            border: 2px solid #4A90E2;
+        }
+
+            .btn-secondary:hover {
+                background: #f0f8ff;
+            }
+
+        .free-badge {
+            background: linear-gradient(135deg,#10B981,#059669);
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+            display: inline-block;
+        }
+
+        /* Hero */
+        .hero {
+            background: linear-gradient(135deg,#E3F2FD 0%,#BBDEFB 50%,#90CAF9 100%);
+            padding: 100px 0 120px;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .hero::before {
+                content: '';
+                position: absolute;
+                width: 800px;
+                height: 800px;
+                background: radial-gradient(circle,rgba(255,255,255,.3) 0%,transparent 70%);
+                border-radius: 50%;
+                top: -300px;
+                right: -300px;
+                animation: pulse 4s ease-in-out infinite;
+            }
+
+        @@keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: .5;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: .3;
+            }
+        }
+
+        .hero-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-text h1 {
+            font-size: 56px;
+            color: #1E3A5F;
+            margin-bottom: 28px;
+            line-height: 1.2;
+            font-weight: 800;
+        }
+
+            .hero-text h1 .highlight {
+                background: linear-gradient(135deg,#4A90E2,#63B3ED);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }
+
+        .hero-text p {
+            font-size: 22px;
+            color: #4A5568;
+            margin-bottom: 36px;
+            line-height: 1.7;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+            .hero-buttons .btn {
+                padding: 16px 40px;
+                font-size: 17px;
+            }
+
+        .hero-stats {
+            display: flex;
+            gap: 40px;
+            margin-top: 50px;
+        }
+
+        .hero-stat {
+            text-align: center;
+        }
+
+        .hero-stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #4A90E2;
+            display: block;
+        }
+
+        .hero-stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .hero-image {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .phone-mockup {
+            width: 320px;
+            height: 640px;
+            background: #fff;
+            border-radius: 45px;
+            box-shadow: 0 25px 80px rgba(0,0,0,.2);
+            padding: 15px;
+            position: relative;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @@keyframes float {
+            0%, 100% {
+                transform: translateY(0) rotate(0);
+            }
+
+            50% {
+                transform: translateY(-20px) rotate(-2deg);
+            }
+        }
+
+        .phone-notch {
+            width: 150px;
+            height: 25px;
+            background: #000;
+            border-radius: 0 0 20px 20px;
+            margin: 0 auto 10px;
+        }
+
+        .phone-content {
+            width: 100%;
+            height: calc(100% - 35px);
+            background: linear-gradient(180deg,#4A90E2 0%,#357ABD 100%);
+            border-radius: 35px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            padding: 30px;
+            position: relative;
+        }
+
+        .chat-bubble {
+            background: #fff;
+            color: #333;
+            padding: 15px 20px;
+            border-radius: 20px 20px 20px 5px;
+            margin: 10px 0;
+            max-width: 80%;
+            align-self: flex-start;
+            box-shadow: 0 2px 8px rgba(0,0,0,.1);
+            animation: slideIn .5s ease;
+        }
+
+            .chat-bubble.user {
+                background: #4A90E2;
+                color: #fff;
+                border-radius: 20px 20px 5px 20px;
+                align-self: flex-end;
+            }
+
+        @@keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .ai-badge {
+            background: rgba(255,255,255,.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sparkle {
+            display: inline-block;
+            animation: sparkle 2s ease-in-out infinite;
+        }
+
+        @@keyframes sparkle {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: .5;
+                transform: scale(1.2);
+            }
+        }
+
+        /* AI Tutor Section */
+        .ai-tutor-section {
+            padding: 120px 0;
+            background: #fff;
+            position: relative;
+        }
+
+        .ai-tutor-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+        }
+
+        .ai-tutor-demo {
+            background: linear-gradient(135deg,#E3F2FD,#BBDEFB);
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(74,144,226,.15);
+            position: relative;
+        }
+
+        .chat-container {
+            background: #fff;
+            border-radius: 20px;
+            padding: 30px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .chat-message {
+            margin-bottom: 20px;
+            animation: fadeInUp .5s ease;
+        }
+
+        @@keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .chat-message.ai {
+            display: flex;
+            gap: 15px;
+        }
+
+        .chat-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg,#4A90E2,#63B3ED);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .chat-message-content {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-radius: 15px 15px 15px 5px;
+            max-width: 80%;
+        }
+
+        .chat-message.user {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+            .chat-message.user .chat-message-content {
+                background: #4A90E2;
+                color: #fff;
+                border-radius: 15px 15px 5px 15px;
+                margin-left: auto;
+            }
+
+        .ai-tutor-text h2 {
+            font-size: 46px;
+            color: #1E3A5F;
+            margin-bottom: 25px;
+            line-height: 1.3;
+        }
+
+        .ai-tutor-text p {
+            font-size: 18px;
+            color: #4A5568;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .ai-features-list {
+            list-style: none;
+            margin-top: 30px;
+        }
+
+            .ai-features-list li {
+                padding: 15px 0;
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                font-size: 17px;
+                color: #4A5568;
+                border-bottom: 1px solid #e0e0e0;
+            }
+
+                .ai-features-list li:last-child {
+                    border-bottom: none;
+                }
+
+        .check-icon {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg,#4A90E2,#63B3ED);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        /* Pronunciation */
+        .pronunciation-section {
+            padding: 120px 0;
+            background: linear-gradient(180deg,#f8fbff 0%,#fff 100%);
+        }
+
+        .pronunciation-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+        }
+
+        .pronunciation-demo {
+            background: #fff;
+            border-radius: 30px;
+            padding: 50px;
+            box-shadow: 0 20px 60px rgba(74,144,226,.15);
+            position: relative;
+        }
+
+        .microphone-animation {
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(135deg,#4A90E2,#63B3ED);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            position: relative;
+            animation: micPulse 2s ease-in-out infinite;
+        }
+
+        @@keyframes micPulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(74,144,226,.7);
+            }
+
+            50% {
+                box-shadow: 0 0 0 30px rgba(74,144,226,0);
+            }
+        }
+
+        .microphone-animation::before {
+            content: '🎤';
+            font-size: 80px;
+        }
+
+        .pronunciation-result {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+
+        .score-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .score-number {
+            font-size: 48px;
+            font-weight: bold;
+            background: linear-gradient(135deg,#10B981,#059669);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg,#10B981,#059669);
+            border-radius: 10px;
+            width: 92%;
+            transition: width 1s ease;
+        }
+
+        .feedback-text {
+            color: #10B981;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .pronunciation-text h2 {
+            font-size: 46px;
+            color: #1E3A5F;
+            margin-bottom: 25px;
+            line-height: 1.3;
+        }
+
+        .pronunciation-text p {
+            font-size: 18px;
+            color: #4A5568;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        /* Courses */
+        .courses-section {
+            padding: 120px 0;
+            background: #fff;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 46px;
+            color: #1E3A5F;
+            margin-bottom: 20px;
+            font-weight: 800;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 20px;
+            color: #4A5568;
+            margin-bottom: 70px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .courses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit,minmax(350px,1fr));
+            gap: 40px;
+        }
+
+        .course-card {
+            background: #fff;
+            border-radius: 25px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(74,144,226,.1);
+            transition: all .4s;
+            border: 2px solid transparent;
+        }
+
+            .course-card:hover {
+                transform: translateY(-10px);
+                box-shadow: 0 20px 60px rgba(74,144,226,.2);
+                border-color: #4A90E2;
+            }
+
+        .course-header {
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            position: relative;
+        }
+
+            .course-header.english {
+                background: linear-gradient(135deg,#4A90E2,#63B3ED);
+            }
+
+            .course-header.ielts {
+                background: linear-gradient(135deg,#8B5CF6,#A78BFA);
+            }
+
+            .course-header.hsk {
+                background: linear-gradient(135deg,#EF4444,#F87171);
+            }
+
+        .course-level {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #fff;
+            color: #333;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .course-body {
+            padding: 35px;
+        }
+
+            .course-body h3 {
+                font-size: 28px;
+                color: #1E3A5F;
+                margin-bottom: 15px;
+                font-weight: 700;
+            }
+
+            .course-body p {
+                color: #4A5568;
+                line-height: 1.7;
+                margin-bottom: 25px;
+                font-size: 16px;
+            }
+
+        .course-features {
+            list-style: none;
+            margin-bottom: 25px;
+        }
+
+            .course-features li {
+                padding: 10px 0;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                color: #4A5568;
+                font-size: 15px;
+            }
+
+                .course-features li::before {
+                    content: '✓';
+                    width: 24px;
+                    height: 24px;
+                    background: linear-gradient(135deg,#10B981,#059669);
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #fff;
+                    font-weight: bold;
+                    flex-shrink: 0;
+                }
+
+        .course-cta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 25px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .course-price {
+            font-size: 24px;
+            font-weight: bold;
+            color: #10B981;
+        }
+
+        /* Features */
+        .features {
+            padding: 120px 0;
+            background: linear-gradient(180deg,#f8fbff 0%, #fff 100%);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit,minmax(320px,1fr));
+            gap: 40px;
+        }
+
+        .feature-card {
+            text-align: center;
+            padding: 50px 35px;
+            border-radius: 25px;
+            transition: all .4s;
+            background: #fff;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .feature-card::before {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(135deg,#E3F2FD,#BBDEFB);
+                opacity: 0;
+                transition: opacity .4s;
+                z-index: 0;
+            }
+
+            .feature-card:hover::before {
+                opacity: 1;
+            }
+
+            .feature-card:hover {
+                transform: translateY(-12px);
+                box-shadow: 0 20px 50px rgba(74,144,226,.2);
+                border-color: #4A90E2;
+            }
+
+            .feature-card > * {
+                position: relative;
+                z-index: 1;
+            }
+
+        .feature-icon {
+            width: 90px;
+            height: 90px;
+            background: linear-gradient(135deg,#4A90E2,#63B3ED);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin: 0 auto 28px;
+            color: #fff;
+            box-shadow: 0 8px 20px rgba(74,144,226,.3);
+            transition: transform .4s;
+        }
+
+        .feature-card:hover .feature-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .feature-card h3 {
+            font-size: 26px;
+            color: #1E3A5F;
+            margin-bottom: 18px;
+            font-weight: 700;
+        }
+
+        .feature-card p {
+            color: #4A5568;
+            line-height: 1.7;
+            font-size: 16px;
+        }
+
+        /* Stats */
+        .stats {
+            background: linear-gradient(135deg,#4A90E2 0%, #357ABD 100%);
+            padding: 100px 0;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .stats::before {
+                content: '';
+                position: absolute;
+                width: 500px;
+                height: 500px;
+                background: radial-gradient(circle, rgba(255,255,255,.1) 0%, transparent 70%);
+                border-radius: 50%;
+                top: -200px;
+                left: -200px;
+            }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+            gap: 50px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat-item {
+            padding: 20px;
+        }
+
+            .stat-item h2 {
+                font-size: 56px;
+                margin-bottom: 15px;
+                font-weight: 800;
+            }
+
+            .stat-item p {
+                font-size: 19px;
+                opacity: .95;
+                line-height: 1.5;
+            }
+
+        /* CTA */
+        .cta {
+            padding: 120px 0;
+            background: linear-gradient(135deg,#E3F2FD 0%, #BBDEFB 50%, #90CAF9 100%);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .cta::before {
+                content: '';
+                position: absolute;
+                width: 600px;
+                height: 600px;
+                background: radial-gradient(circle, rgba(255,255,255,.3) 0%, transparent 70%);
+                border-radius: 50%;
+                bottom: -200px;
+                left: -200px;
+            }
+
+        .cta-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta h2 {
+            font-size: 48px;
+            color: #1E3A5F;
+            margin-bottom: 28px;
+            font-weight: 800;
+        }
+
+        .cta p {
+            font-size: 22px;
+            color: #4A5568;
+            margin-bottom: 45px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta .btn {
+            padding: 18px 50px;
+            font-size: 18px;
+        }
+
+        /* Footer */
+        footer {
+            background: #1E3A5F;
+            color: #fff;
+            padding: 70px 0 35px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+            gap: 50px;
+            margin-bottom: 50px;
+        }
+
+        .footer-section h3 {
+            margin-bottom: 25px;
+            font-size: 19px;
+            font-weight: 700;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+            .footer-section ul li {
+                margin-bottom: 15px;
+            }
+
+        .footer-section a {
+            color: rgba(255,255,255,.85);
+            text-decoration: none;
+            transition: all .3s;
+            font-size: 15px;
+        }
+
+            .footer-section a:hover {
+                color: #fff;
+                padding-left: 5px;
+            }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 35px;
+            border-top: 1px solid rgba(255,255,255,.2);
+            color: rgba(255,255,255,.8);
+            font-size: 15px;
+        }
+
+        /* Responsive */
+        @@media (max-width:968px) {
+            .hero-content, .ai-tutor-content, .pronunciation-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+                gap: 50px;
+            }
+
+            .hero-text h1, .ai-tutor-text h2 {
+                font-size: 40px;
+            }
+
+            .hero-buttons {
+                justify-content: center;
+            }
+
+            .phone-mockup {
+                width: 280px;
+                height: 560px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .hero-stats {
+                justify-content: center;
+            }
+
+            .courses-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav class="container">
+            <div class="logo">
+                <div class="logo-icon">L</div>
+                <span>LearnLangs<span class="free-badge">MIỄN PHÍ</span></span>
+            </div>
+            <div class="nav-links">
+                <a href="#ai-tutor">AI Tutor</a>
+                <a href="#pronunciation">Phát âm</a>
+                <a href="#courses">Khóa học</a>
+                <a href="#features">Tính năng</a>
+                <a class="btn btn-secondary" href="/Identity/Account/Login">Đăng nhập</a>
+                <a class="btn btn-primary" href="/Identity/Account/Register">Bắt đầu miễn phí</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="container hero-content">
+            <div class="hero-text">
+                <h1>Học ngôn ngữ <span class="highlight">miễn phí 100%</span> với AI Tutor</h1>
+                <p>Trải nghiệm học ngôn ngữ hoàn toàn mới với trợ lý AI cá nhân hóa, chấm chữa phát âm tức thì và hàng ngàn bài học chất lượng - hoàn toàn miễn phí!</p>
+                <div class="hero-buttons">
+                    <a class="btn btn-primary" href="/Identity/Account/Register">Bắt đầu học ngay</a>
+                    <a class="btn btn-secondary" href="#ai-tutor">Xem demo AI Tutor</a>
+                </div>
+                <div class="hero-stats">
+                    <div class="hero-stat"><span class="hero-stat-number">10M+</span><span class="hero-stat-label">Người học toàn cầu</span></div>
+                    <div class="hero-stat"><span class="hero-stat-number">100%</span><span class="hero-stat-label">Miễn phí mãi mãi</span></div>
+                    <div class="hero-stat"><span class="hero-stat-number">4.9★</span><span class="hero-stat-label">Đánh giá cao</span></div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="testi-card p-4 shadow-sm">
-                    <p class="fst-italic">"The pronunciation assessment is super accurate — it feels like having a personal native teacher giving detailed feedback."</p>
-                    <div class="fw-semibold mt-2">— Nam, Software Engineer</div>
+            <div class="hero-image">
+                <div class="phone-mockup">
+                    <div class="phone-notch"></div>
+                    <div class="phone-content">
+                        <div class="ai-badge"><span class="sparkle">✨</span> AI Tutor đang hoạt động</div>
+                        <div class="chat-bubble">Chào bạn! Tôi là AI Tutor của bạn 👋</div>
+                        <div class="chat-bubble user">Giúp tôi luyện phát âm tiếng Anh nhé!</div>
+                        <div class="chat-bubble">Tuyệt vời! Hãy nói "Hello, how are you?" 🎤</div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
+
+    <!-- AI Tutor -->
+    <section class="ai-tutor-section" id="ai-tutor">
+        <div class="container ai-tutor-content">
+            <div class="ai-tutor-demo">
+                <div class="chat-container">
+                    <div class="chat-message ai">
+                        <div class="chat-avatar">AI</div>
+                        <div class="chat-message-content"><strong>AI Tutor:</strong> Xin chào! Hôm nay bạn muốn học gì về tiếng Anh?</div>
+                    </div>
+                    <div class="chat-message user">
+                        <div class="chat-message-content"><strong>Bạn:</strong> Hãy dạy tôi về thì hiện tại đơn giản.</div>
+                    </div>
+                    <div class="chat-message ai">
+                        <div class="chat-avatar">AI</div>
+                        <div class="chat-message-content"><strong>AI Tutor:</strong> Simple Present dùng để diễn tả thói quen, sự thật. Cấu trúc: Subject + Verb (thêm s/es với he/she/it).</div>
+                    </div>
+                    <div class="chat-message user">
+                        <div class="chat-message-content"><strong>Bạn:</strong> Ví dụ?</div>
+                    </div>
+                    <div class="chat-message ai">
+                        <div class="chat-avatar">AI</div>
+                        <div class="chat-message-content"><strong>AI Tutor:</strong> I eat breakfast every day. The sun rises in the east.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="ai-tutor-text">
+                <h2>AI Tutor Cá Nhân Hóa Cho Bạn</h2>
+                <p>Trợ lý AI đồng hành trong mọi bài học, giải đáp tức thì và điều chỉnh nội dung theo trình độ của bạn.</p>
+                <p>Trò chuyện tự nhiên như với giáo viên thật, luyện nghe nói và ngữ pháp hiệu quả.</p>
+                <ul class="ai-features-list">
+                    <li><span class="check-icon">✓</span> Trò chuyện 24/7 bằng ngôn ngữ tự nhiên</li>
+                    <li><span class="check-icon">✓</span> Bài học cá nhân hóa dựa trên tiến độ</li>
+                    <li><span class="check-icon">✓</span> Phản hồi tức thì và sửa lỗi chi tiết</li>
+                    <li><span class="check-icon">✓</span> Hỗ trợ đa ngôn ngữ</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pronunciation -->
+    <section class="pronunciation-section" id="pronunciation">
+        <div class="container pronunciation-content">
+            <div class="pronunciation-text">
+                <h2>Luyện Phát Âm Chuẩn Như Người Bản Xứ</h2>
+                <p>Chấm điểm và phản hồi chi tiết phát âm bằng công nghệ nhận diện giọng nói.</p>
+                <ul class="ai-features-list">
+                    <li><span class="check-icon">✓</span> Chấm điểm chính xác</li>
+                    <li><span class="check-icon">✓</span> Phân tích âm vị & ngữ điệu</li>
+                    <li><span class="check-icon">✓</span> Bài tập hàng ngày</li>
+                    <li><span class="check-icon">✓</span> Theo dõi tiến bộ</li>
+                </ul>
+            </div>
+            <div class="pronunciation-demo">
+                <div class="microphone-animation"></div>
+                <div class="pronunciation-result">
+                    <div class="score-display"><span class="score-number">92%</span><span class="feedback-text">Tuyệt vời!</span></div>
+                    <div class="progress-bar"><div class="progress-fill"></div></div>
+                    <p class="feedback-text">Hãy chú ý âm /θ/ trong “think”.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Courses -->
+    <section class="courses-section" id="courses">
+        <div class="container">
+            <h2 class="section-title">Khóa Học Đa Dạng</h2>
+            <p class="section-subtitle">Chọn từ hàng trăm khóa học phù hợp mọi trình độ.</p>
+            <div class="courses-grid">
+                <div class="course-card">
+                    <div class="course-header english">🇺🇸</div>
+                    <div class="course-body">
+                        <span class="course-level">Cơ bản - Nâng cao</span>
+                        <h3>Tiếng Anh Giao Tiếp</h3>
+                        <p>Hội thoại hàng ngày, từ chào hỏi đến chủ đề phức tạp.</p>
+                        <ul class="course-features"><li>500+ bài học</li><li>Luyện nghe nói thực tế</li><li>Chứng chỉ hoàn thành</li></ul>
+                        <div class="course-cta"><span class="course-price">Miễn phí</span><a class="btn btn-primary" href="/Identity/Account/Register">Bắt đầu</a></div>
+                    </div>
+                </div>
+                <div class="course-card">
+                    <div class="course-header ielts">📚</div>
+                    <div class="course-body">
+                        <span class="course-level">Chuyên sâu</span>
+                        <h3>Chuẩn Bị IELTS</h3>
+                        <p>Làm bài mô phỏng & chiến lược đạt band 7+.</p>
+                        <ul class="course-features"><li>4 kỹ năng</li><li>Đề mô phỏng</li><li>Mẹo làm bài</li></ul>
+                        <div class="course-cta"><span class="course-price">Miễn phí</span><a class="btn btn-primary" href="/Identity/Account/Register">Bắt đầu</a></div>
+                    </div>
+                </div>
+                <div class="course-card">
+                    <div class="course-header hsk">🇨🇳</div>
+                    <div class="course-body">
+                        <span class="course-level">HSK 1-6</span>
+                        <h3>Tiếng Trung HSK</h3>
+                        <p>Từ cơ bản đến nâng cao, luyện thi từng cấp.</p>
+                        <ul class="course-features"><li>Hán tự & pinyin</li><li>Luyện thi theo cấp</li><li>Văn hóa</li></ul>
+                        <div class="course-cta"><span class="course-price">Miễn phí</span><a class="btn btn-primary" href="/Identity/Account/Register">Bắt đầu</a></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features" id="features">
+        <div class="container">
+            <h2 class="section-title">Tính Năng Nổi Bật</h2>
+            <p class="section-subtitle">Trải nghiệm học tập hiện đại được cá nhân hóa.</p>
+            <div class="features-grid">
+                <div class="feature-card"><div class="feature-icon">🤖</div><h3>AI Cá Nhân Hóa</h3><p>Điều chỉnh bài học theo tiến độ.</p></div>
+                <div class="feature-card"><div class="feature-icon">🎧</div><h3>Luyện Nghe Nói</h3><p>Phản hồi tức thì từ AI.</p></div>
+                <div class="feature-card"><div class="feature-icon">📱</div><h3>Ứng Dụng Di Động</h3><p>Học mọi lúc mọi nơi.</p></div>
+                <div class="feature-card"><div class="feature-icon">🏆</div><h3>Theo Dõi Tiến Độ</h3><p>Biểu đồ & phần thưởng.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="stats">
+        <div class="container stats-grid">
+            <div class="stat-item"><h2>10M+</h2><p>Người dùng toàn cầu</p></div>
+            <div class="stat-item"><h2>50+</h2><p>Ngôn ngữ hỗ trợ</p></div>
+            <div class="stat-item"><h2>1B+</h2><p>Bài học hoàn thành</p></div>
+            <div class="stat-item"><h2>4.9/5</h2><p>Đánh giá trung bình</p></div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta">
+        <div class="container cta-content">
+            <h2>Bắt Đầu Hành Trình Học Ngôn Ngữ Ngay Hôm Nay!</h2>
+            <p>Đăng ký miễn phí và khám phá thế giới ngôn ngữ với AI Tutor.</p>
+            <a class="btn btn-primary" href="/Identity/Account/Register">Đăng ký ngay</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container footer-content">
+            <div class="footer-section"><h3>LearnLangs</h3><p>Học ngôn ngữ miễn phí với AI.</p></div>
+            <div class="footer-section"><h3>Liên kết nhanh</h3><ul><li><a href="#ai-tutor">AI Tutor</a></li><li><a href="#pronunciation">Phát âm</a></li><li><a href="#courses">Khóa học</a></li><li><a href="#features">Tính năng</a></li></ul></div>
+            <div class="footer-section"><h3>Hỗ trợ</h3><ul><li><a href="#">FAQ</a></li><li><a href="#">Liên hệ</a></li><li><a href="#">Chính sách bảo mật</a></li><li><a href="#">Điều khoản dịch vụ</a></li></ul></div>
+            <div class="footer-section"><h3>Theo dõi chúng tôi</h3><ul><li><a href="#">Facebook</a></li><li><a href="#">Twitter</a></li><li><a href="#">Instagram</a></li><li><a href="#">YouTube</a></li></ul></div>
+        </div>
+        <div class="container footer-bottom">© 2025 LearnLangs. All rights reserved.</div>
+    </footer>
+</body>
+</html>
