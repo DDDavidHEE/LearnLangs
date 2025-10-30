@@ -1,101 +1,214 @@
-﻿<script>
-    const sessionId = document.getElementById('sid').textContent.trim();
-    const log = document.getElementById('log');
-    const input = document.getElementById('input');
-    const sendBtn = document.getElementById('sendBtn');
-    const clearBtn = document.getElementById('clearBtn');
-    const ttsChk = document.getElementById('ttsChk');
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Tutor Chat</title>
 
-    function add(role, text){
-      const div = document.createElement('div');
-      div.className = 'msg' + (role==='You' ? ' me' : '');
-      div.textContent = `${role}: ${text ?? ''}`;
-      log.appendChild(div);
-      log.scrollTop = log.scrollHeight;
-
-      if (role === 'AI' && ttsChk?.checked && text) {
-        try {
-          speechSynthesis.speak(new SpeechSynthesisUtterance(text));
-        } catch(e) {
-          console.warn('TTS error:', e);
+    <style>
+        /* Tổng thể khung chat */
+        #chat-container {
+          width: 420px;
+          margin: 40px auto;
+          background: #f7fbff;
+          border-radius: 20px;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+          font-family: "Segoe UI", sans-serif;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
         }
-      }
-    }
 
-    async function send(){
-      const text = (input.value || '').trim();
-      if(!text) return;
+        /* Khu vực hiển thị tin nhắn */
+        .chat-log {
+          flex: 1;
+          padding: 20px;
+          overflow-y: auto;
+          max-height: 500px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
 
-      add('You', text);
-      input.value = '';
-      sendBtn.disabled = true;
+        /* Bong bóng chat chung */
+        .msg {
+          max-width: 80%;
+          padding: 12px 16px;
+          border-radius: 15px;
+          line-height: 1.4;
+          white-space: pre-wrap;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
 
-      const targetLanguage = "English";
-      const level = "beginner";
-      const goal = "conversation";
+        /* Tin nhắn AI */
+        .msg:not(.me) {
+          align-self: flex-start;
+          background: #ffffff;
+          color: #333;
+        }
 
-      try{
-        const res = await fetch('/api/conversation/send', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ sessionId, text, targetLanguage, level, goal })
+        .msg:not(.me)::before {
+          content: "AI Tutor: ";
+          font-weight: bold;
+          color: #555;
+        }
+
+        /* Tin nhắn người dùng */
+        .msg.me {
+          align-self: flex-end;
+          background: #1976d2;
+          color: white;
+        }
+
+        .msg.me::before {
+          content: "Bạn: ";
+          font-weight: bold;
+        }
+
+        /* Thanh nhập liệu */
+        .chat-input {
+          display: flex;
+          gap: 10px;
+          border-top: 1px solid #ddd;
+          background: #fff;
+          padding: 10px;
+        }
+
+        .chat-input textarea {
+          flex: 1;
+          height: 40px;
+          resize: none;
+          padding: 8px;
+          border-radius: 8px;
+          border: 1px solid #ccc;
+          font-size: 14px;
+        }
+
+        .chat-input button {
+          background: #1976d2;
+          color: #fff;
+          border: none;
+          border-radius: 8px;
+          padding: 0 14px;
+          cursor: pointer;
+          transition: background 0.2s;
+        }
+
+        .chat-input button:hover {
+          background: #0f5cb8;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="chat-container">
+        <div id="log" class="chat-log"></div>
+
+        <div class="chat-input">
+            <textarea id="input" placeholder="Nhập tin nhắn..."></textarea>
+            <button id="sendBtn">Gửi</button>
+            <button id="clearBtn">Xóa</button>
+            <label><input type="checkbox" id="ttsChk" /> TTS</label>
+        </div>
+
+        <span id="sid" style="display:none;">session_001</span>
+    </div>
+
+    <script>
+        const sessionId = document.getElementById('sid').textContent.trim();
+        const log = document.getElementById('log');
+        const input = document.getElementById('input');
+        const sendBtn = document.getElementById('sendBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const ttsChk = document.getElementById('ttsChk');
+
+        function add(role, text){
+          const div = document.createElement('div');
+          div.className = 'msg' + (role === 'You' ? ' me' : '');
+          div.textContent = text ?? '';
+          log.appendChild(div);
+          log.scrollTop = log.scrollHeight;
+
+          if (role === 'AI' && ttsChk?.checked && text) {
+            try {
+              speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+            } catch(e) {
+              console.warn('TTS error:', e);
+            }
+          }
+        }
+
+        async function send(){
+          const text = (input.value || '').trim();
+          if(!text) return;
+
+          add('You', text);
+          input.value = '';
+          sendBtn.disabled = true;
+
+          const targetLanguage = "English";
+          const level = "beginner";
+          const goal = "conversation";
+
+          try{
+            const res = await fetch('/api/conversation/send', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({ sessionId, text, targetLanguage, level, goal })
+            });
+
+            let data;
+            try {
+              data = await res.json();
+            } catch(e) {
+              add('AI', `⚠️ Invalid response format: ${e.message}`);
+              return;
+            }
+
+            if(!res.ok){
+              const errorMsg = data.error || data.details || res.statusText;
+              add('AI', `⚠️ Error ${res.status}: ${errorMsg}`);
+              console.error('API Error:', data);
+              return;
+            }
+
+            const aiText = data.text || data.reply || '(no content)';
+            add('AI', aiText);
+
+          } catch(e) {
+            console.error('Send error:', e);
+            add('AI', '⚠️ Network error: ' + e.message);
+          } finally {
+            sendBtn.disabled = false;
+            input.focus();
+          }
+        }
+
+        sendBtn.onclick = send;
+
+        input.addEventListener('keydown', e => {
+          if(e.key === 'Enter' && !e.shiftKey){
+            e.preventDefault();
+            send();
+          }
         });
 
-        // Parse response as JSON
-        let data;
-        try {
-          data = await res.json();
-        } catch(e) {
-          add('AI', `⚠️ Invalid response format: ${e.message}`);
-          return;
-        }
+        clearBtn.onclick = async () => {
+          if(!confirm('Clear all messages?')) return;
+          try {
+            await fetch('/api/conversation/clear', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify(sessionId)
+            });
+            log.innerHTML = '';
+          } catch(e) {
+            console.error('Clear error:', e);
+          }
+        };
 
-        // Check if request was successful
-        if(!res.ok){
-          const errorMsg = data.error || data.details || res.statusText;
-          add('AI', `⚠️ Error ${res.status}: ${errorMsg}`);
-          console.error('API Error:', data);
-          return;
-        }
-
-        // Display AI response - FIXED: use "text" instead of "reply"
-        const aiText = data.text || data.reply || '(no content)';
-        add('AI', aiText);
-
-      } catch(e) {
-        console.error('Send error:', e);
-        add('AI', '⚠️ Network error: ' + e.message);
-      } finally {
-        sendBtn.disabled = false;
-        input.focus();
-      }
-    }
-
-    sendBtn.onclick = send;
-
-    input.addEventListener('keydown', e => {
-      if(e.key === 'Enter' && !e.shiftKey){
-        e.preventDefault();
-        send();
-      }
-    });
-
-    clearBtn.onclick = async () => {
-      if(!confirm('Clear all messages?')) return;
-
-      try {
-        // FIXED: use correct endpoint "clear" instead of "reset"
-        await fetch('/api/conversation/clear', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify(sessionId)
-        });
-        log.innerHTML = '';
-      } catch(e) {
-        console.error('Clear error:', e);
-      }
-    };
-
-    // Welcome message
-    add('AI', 'Hello! How can I help you practice English today?');
-</script>
+        // Welcome message
+        add('AI', 'Xin chào! Hôm nay bạn muốn học gì về tiếng Anh?');
+    </script>
+</body>
+</html>
