@@ -1,0 +1,58 @@
+﻿@{
+    ViewData["Title"] = "Blocks";
+}
+
+<div class="container-xxl my-4" id="blocksApp">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+        <div class="h5 mb-0 fw-semibold">Blocks</div>
+        <div class="d-flex align-items-center gap-3 small">
+            <div>Score: <b id="score">0</b></div>
+            <div class="text-warning">🏆 <b id="best">0</b></div>
+            <button id="newGameBtn" class="btn btn-sm btn-outline-secondary">New</button>
+            <button id="howBtn" class="btn btn-sm btn-primary">How to play</button>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- CỘT TRÁI: khay 3 mảnh + panel Q&A -->
+        <div class="col-12 col-lg-4">
+            <!-- Khay mảnh (xếp dọc như hình) -->
+            <div id="tray" class="d-flex flex-column align-items-start gap-4"></div>
+
+            <!-- Panel Q&A (hiện sau mỗi lượt 3 mảnh) -->
+            <div id="qaPanel" class="mt-4 p-3 border rounded-4 bg-white shadow-sm d-none">
+                <div class="small text-secondary mb-1">Question</div>
+                <div id="qaPrompt" class="fw-semibold mb-2">…</div>
+                <div class="input-group">
+                    <input id="qaInput" class="form-control" placeholder="Type your answer" />
+                    <button id="qaSubmit" class="btn btn-success">OK</button>
+                </div>
+                <div id="qaHint" class="small mt-2 text-secondary"></div>
+                <button id="qaSkip" class="btn btn-link px-0 mt-2 small">↻ Try another</button>
+            </div>
+        </div>
+
+        <!-- CỘT PHẢI: bàn 10×10 -->
+        <div class="col-12 col-lg-8 d-flex justify-content-lg-start justify-content-center">
+            <div id="board" class="blocks-board"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal hướng dẫn đơn giản -->
+<div id="howModal" class="blocks-modal">
+    <div class="card p-3 p-lg-4 rounded-4 shadow">
+        <div class="d-flex justify-content-between align-items-start">
+            <h4 class="fw-semibold mb-3">Cách chơi Blocks</h4>
+            <button class="btn btn-light btn-sm rounded-circle" data-close="modal">✕</button>
+        </div>
+        <ol class="mb-3">
+            <li>Chọn 1 mảnh trong khay bên trái (nó sẽ được viền xanh).</li>
+            <li>Nhấp vào ô trên lưới 10×10 để đặt mảnh.</li>
+            <li>Hoàn thành hàng/cột sẽ bị xóa và cộng điểm.</li>
+            <li>Đặt đủ 3 mảnh → trả lời 1 câu hỏi đúng để nhận 3 mảnh mới.</li>
+            <li>Không còn nước đi hợp lệ ⇒ Game Over.</li>
+        </ol>
+        <button class="btn btn-primary" data-close="modal">OK</button>
+    </div>
+</div>

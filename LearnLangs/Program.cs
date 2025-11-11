@@ -5,11 +5,13 @@ using LearnLangs.Options;
 using LearnLangs.Services.Chat;
 using LearnLangs.Services.Pronunciation;
 using LearnLangs.Services.Translate;
-using LearnLangs.Services.Games;           
+using LearnLangs.Services.Games;
+
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Net.Http.Headers;
+using Microsoft.AspNetCore.Http; // 👈 for CookieSecurePolicy, SameSiteMode
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +41,22 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 })
 .AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<ApplicationDbContext>();
+
+// ✅ Cookie đăng nhập – tránh “mất phiên” & chỉ gửi qua HTTPS
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.Name = "LearnLangs.Identity";
+    options.LoginPath = "/Identity/Account/Login";
+    options.LogoutPath = "/Identity/Account/Logout";
+    options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+
+    options.ExpireTimeSpan = TimeSpan.FromDays(14);
+    options.SlidingExpiration = true;
+
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // chỉ gửi trên HTTPS
+    options.Cookie.SameSite = SameSiteMode.Lax;              // đủ cho điều hướng nội bộ
+});
 
 // ==================== MVC + APIs ====================
 builder.Services.AddControllersWithViews();
@@ -104,7 +122,7 @@ builder.Services.AddHttpClient<IGeminiChatService, GeminiChatService>((sp, http)
 });
 
 // ==================== GAMES/EXAMS DI ====================
-builder.Services.AddScoped<GameService>();   // 👈 NEW
+builder.Services.AddScoped<GameService>();   // giữ nguyên
 
 // ==================== BUILD APP ====================
 var app = builder.Build();
@@ -117,7 +135,7 @@ using (var scope = app.Services.CreateScope())
         await SeedData.EnsureSeededAsync(scope.ServiceProvider);
         await IdentitySeed.EnsureAdminAsync(scope.ServiceProvider);
 
-        // 👇 NEW: seed Games/Exams demo (nếu bạn tạo GameSeed/ExamSeed)
+        // nếu có Seed cho Games/Exams
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         await LearnLangs.Data.GameSeed.SeedAsync(db);
         await LearnLangs.Data.ExamSeed.SeedAsync(db);
@@ -170,6 +188,26 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthentication();
+
+// ✅ ĐÃ ĐĂNG NHẬP mà vào /Login hoặc /Register → chuyển hướng về trang chủ (hoặc returnUrl)
+app.Use(async (ctx, next) =>
+{
+    if (ctx.User?.Identity?.IsAuthenticated == true)
+    {
+        var path = ctx.Request.Path.Value?.ToLowerInvariant();
+        if (path == "/identity/account/login" || path == "/identity/account/register")
+        {
+            var ret = ctx.Request.Query["returnUrl"].ToString();
+            // tránh open-redirect: chỉ cho phép đường dẫn tương đối nội bộ
+            var isLocal = !string.IsNullOrWhiteSpace(ret) && ret.StartsWith("/") && !ret.StartsWith("//") && !ret.StartsWith("/\\");
+            ctx.Response.Redirect(isLocal ? ret : "/");
+            return;
+        }
+    }
+
+    await next();
+});
+
 app.UseAuthorization();
 
 // ==================== ROUTING ====================
@@ -183,7 +221,7 @@ app.MapControllerRoute(
 // API Controllers (attribute-routed)
 app.MapControllers();
 
-// Razor Pages
+// Razor Pages (Identity UI)
 app.MapRazorPages();
 
 // ==================== RUN ====================

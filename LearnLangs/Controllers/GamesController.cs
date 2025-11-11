@@ -101,5 +101,17 @@ namespace LearnLangs.Controllers
 
             return Ok();
         }
+
+        // ===========================
+        //  BLOCKS MINI-GAME (độc lập)
+        // ===========================
+
+        // GET /games/blocks  -> hiển thị trò chơi Blocks
+        [HttpGet("blocks")]
+        public IActionResult Blocks()
+        {
+            // View tương ứng: Views/Games/Blocks.cshtml
+            return View();
+        }
     }
 }

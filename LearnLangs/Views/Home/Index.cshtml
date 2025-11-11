@@ -1,5 +1,13 @@
 ﻿@{
     Layout = null;
+
+    // trạng thái & url điều hướng
+    var isAuth = User?.Identity?.IsAuthenticated ?? false;
+    var dashboardUrl = Url.Action("Index", "Translate"); // 👈 đổi sang Courses/Games nếu muốn
+    var loginUrl = Url.Page("/Account/Login", new { area = "Identity", returnUrl = dashboardUrl });
+    var registerUrl = Url.Page("/Account/Register", new { area = "Identity", returnUrl = dashboardUrl });
+    var logoutUrl = Url.Page("/Account/Logout", new { area = "Identity" });
+    var userName = User?.Identity?.Name;
 }
 <!DOCTYPE html>
 <html lang="vi">
@@ -977,8 +985,21 @@
                 <a href="#pronunciation">Phát âm</a>
                 <a href="#courses">Khóa học</a>
                 <a href="#features">Tính năng</a>
-                <a class="btn btn-secondary" href="/Identity/Account/Login">Đăng nhập</a>
-                <a class="btn btn-primary" href="/Identity/Account/Register">Bắt đầu miễn phí</a>
+
+                @if (isAuth)
+                {
+                    <a class="btn btn-secondary" href="@dashboardUrl">Vào học</a>
+                    <span style="color:#555;">Xin chào @userName</span>
+                    <form id="logoutForm" method="post" action="@logoutUrl" style="display:inline; margin-left:8px;">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-primary">Đăng xuất</button>
+                    </form>
+                }
+                else
+                {
+                    <a class="btn btn-secondary" href="@loginUrl">Đăng nhập</a>
+                    <a class="btn btn-primary" href="@registerUrl">Bắt đầu miễn phí</a>
+                }
             </div>
         </nav>
     </header>
@@ -989,16 +1010,27 @@
             <div class="hero-text">
                 <h1>Học ngôn ngữ <span class="highlight">miễn phí 100%</span> với AI Tutor</h1>
                 <p>Trải nghiệm học ngôn ngữ hoàn toàn mới với trợ lý AI cá nhân hóa, chấm chữa phát âm tức thì và hàng ngàn bài học chất lượng - hoàn toàn miễn phí!</p>
+
                 <div class="hero-buttons">
-                    <a class="btn btn-primary" href="/Identity/Account/Register">Bắt đầu học ngay</a>
-                    <a class="btn btn-secondary" href="#ai-tutor">Xem demo AI Tutor</a>
+                    @if (isAuth)
+                    {
+                        <a class="btn btn-primary" href="@dashboardUrl">Bắt đầu học ngay</a>
+                        <a class="btn btn-secondary" href="/Conversation">Xem demo AI Tutor</a>
+                    }
+                    else
+                    {
+                        <a class="btn btn-primary" href="@registerUrl">Bắt đầu học ngay</a>
+                        <a class="btn btn-secondary" href="#ai-tutor">Xem demo AI Tutor</a>
+                    }
                 </div>
+
                 <div class="hero-stats">
                     <div class="hero-stat"><span class="hero-stat-number">10M+</span><span class="hero-stat-label">Người học toàn cầu</span></div>
                     <div class="hero-stat"><span class="hero-stat-number">100%</span><span class="hero-stat-label">Miễn phí mãi mãi</span></div>
                     <div class="hero-stat"><span class="hero-stat-number">4.9★</span><span class="hero-stat-label">Đánh giá cao</span></div>
                 </div>
             </div>
+
             <div class="hero-image">
                 <div class="phone-mockup">
                     <div class="phone-notch"></div>
@@ -1089,7 +1121,7 @@
                         <h3>Tiếng Anh Giao Tiếp</h3>
                         <p>Hội thoại hàng ngày, từ chào hỏi đến chủ đề phức tạp.</p>
                         <ul class="course-features"><li>500+ bài học</li><li>Luyện nghe nói thực tế</li><li>Chứng chỉ hoàn thành</li></ul>
-                        <div class="course-cta"><span class="course-price">Miễn phí</span><a class="btn btn-primary" href="/Identity/Account/Register">Bắt đầu</a></div>
+                        <div class="course-cta"><span class="course-price">Miễn phí</span><a class="btn btn-primary" href="@(isAuth ? dashboardUrl : registerUrl)">Bắt đầu</a></div>
                     </div>
                 </div>
                 <div class="course-card">
@@ -1099,7 +1131,7 @@
                         <h3>Chuẩn Bị IELTS</h3>
                         <p>Làm bài mô phỏng & chiến lược đạt band 7+.</p>
                         <ul class="course-features"><li>4 kỹ năng</li><li>Đề mô phỏng</li><li>Mẹo làm bài</li></ul>
-                        <div class="course-cta"><span class="course-price">Miễn phí</span><a class="btn btn-primary" href="/Identity/Account/Register">Bắt đầu</a></div>
+                        <div class="course-cta"><span class="course-price">Miễn phí</span><a class="btn btn-primary" href="@(isAuth ? dashboardUrl : registerUrl)">Bắt đầu</a></div>
                     </div>
                 </div>
                 <div class="course-card">
@@ -1109,7 +1141,7 @@
                         <h3>Tiếng Trung HSK</h3>
                         <p>Từ cơ bản đến nâng cao, luyện thi từng cấp.</p>
                         <ul class="course-features"><li>Hán tự & pinyin</li><li>Luyện thi theo cấp</li><li>Văn hóa</li></ul>
-                        <div class="course-cta"><span class="course-price">Miễn phí</span><a class="btn btn-primary" href="/Identity/Account/Register">Bắt đầu</a></div>
+                        <div class="course-cta"><span class="course-price">Miễn phí</span><a class="btn btn-primary" href="@(isAuth ? dashboardUrl : registerUrl)">Bắt đầu</a></div>
                     </div>
                 </div>
             </div>
@@ -1145,7 +1177,7 @@
         <div class="container cta-content">
             <h2>Bắt Đầu Hành Trình Học Ngôn Ngữ Ngay Hôm Nay!</h2>
             <p>Đăng ký miễn phí và khám phá thế giới ngôn ngữ với AI Tutor.</p>
-            <a class="btn btn-primary" href="/Identity/Account/Register">Đăng ký ngay</a>
+            <a class="btn btn-primary" href="@(isAuth ? dashboardUrl : registerUrl)">@(isAuth ? "Vào học ngay" : "Đăng ký ngay")</a>
         </div>
     </section>
 
